@@ -32,7 +32,7 @@
 }
 
 .pendingTitle {
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-ink);
 }
 
@@ -51,5 +51,4 @@
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
 }

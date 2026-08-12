@@ -5,8 +5,8 @@
   --color-paper-raised: oklch(100% 0 0);
   --color-ink: oklch(26% 0.006 30);
   --color-ink-muted: oklch(52% 0.008 30);
-  --color-border: oklch(94% 0.005 60);
-  --color-border-subtle: oklch(96.5% 0.004 60);
+  --color-border: oklch(90% 0.006 60);
+  --color-border-subtle: oklch(93.5% 0.005 60);
 
   --color-accent: oklch(62% 0.075 12); /* dusty rose */
   --color-accent-soft: oklch(95% 0.02 12);
@@ -20,7 +20,7 @@
   --color-couple-a: oklch(70% 0.06 12); /* rose */
   --color-couple-b: oklch(68% 0.05 300); /* lavender */
 
-  --font-display: 'Nunito', ui-rounded, system-ui, sans-serif;
+  --font-display: 'Quicksand', ui-rounded, system-ui, sans-serif;
   --font-body:
     'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
@@ -41,10 +41,12 @@
   --space-7: 3rem;
 
   --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1.125rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
   --radius-pill: 999px;
 
+  /* Reserved for true elevation (sheets, the FAB) — everyday surfaces use a hairline
+     border instead of a shadow, which reads as finer and crisper on small screens. */
   --shadow-sm: 0 1px 2px oklch(30% 0.02 30 / 0.04);
   --shadow-md: 0 6px 16px oklch(30% 0.02 30 / 0.06);
   --shadow-lg: 0 16px 32px oklch(30% 0.02 30 / 0.1);
@@ -65,8 +67,8 @@
     --color-paper-raised: oklch(23% 0.01 30);
     --color-ink: oklch(95% 0.005 90);
     --color-ink-muted: oklch(74% 0.01 60);
-    --color-border: oklch(30% 0.012 40);
-    --color-border-subtle: oklch(26% 0.01 40);
+    --color-border: oklch(32% 0.012 40);
+    --color-border-subtle: oklch(28% 0.01 40);
 
     --color-accent: oklch(74% 0.08 12);
     --color-accent-soft: oklch(32% 0.045 12);
@@ -106,8 +108,8 @@
   --color-paper-raised: oklch(100% 0 0);
   --color-ink: oklch(26% 0.006 30);
   --color-ink-muted: oklch(52% 0.008 30);
-  --color-border: oklch(94% 0.005 60);
-  --color-border-subtle: oklch(96.5% 0.004 60);
+  --color-border: oklch(90% 0.006 60);
+  --color-border-subtle: oklch(93.5% 0.005 60);
 
   --color-accent: oklch(62% 0.075 12);
   --color-accent-soft: oklch(95% 0.02 12);
