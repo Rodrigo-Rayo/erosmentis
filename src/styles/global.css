@@ -15,11 +15,15 @@ body,
 
 body {
   margin: 0;
-  background: var(--color-paper);
+  background:
+    radial-gradient(ellipse 900px 500px at 15% -10%, var(--color-accent-soft) 0%, transparent 60%),
+    radial-gradient(ellipse 700px 500px at 100% 15%, var(--color-positive-soft) 0%, transparent 55%),
+    var(--color-paper);
+  background-attachment: fixed;
   color: var(--color-ink);
   font-family: var(--font-body);
   font-size: var(--text-base);
-  line-height: 1.5;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   overscroll-behavior-y: none;
 }
@@ -28,7 +32,8 @@ h1,
 h2,
 h3 {
   font-family: var(--font-display);
-  font-weight: 700;
+  font-weight: 600;
+  letter-spacing: -0.01em;
   margin: 0;
   color: var(--color-ink);
 }

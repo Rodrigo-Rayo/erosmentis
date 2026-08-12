@@ -32,7 +32,7 @@ export async function createSession(input: CreateSessionInput): Promise<Session>
   if (input.usePackage && !input.paymentStatusOverride) {
     const pkg = await findConsumablePackage(input.clientId, input.serviceTypeId)
     if (!pkg) {
-      throw new Error('No hay bono con sesiones disponibles para este cliente y servicio')
+      throw new Error('No hay bono con sesiones disponibles para este paciente y servicio')
     }
     packageId = pkg.id
     priceCents = resolveSessionPrice(serviceType, pkg.perSessionValueCents)

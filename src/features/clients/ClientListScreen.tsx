@@ -13,7 +13,7 @@ export function ClientListScreen() {
   return (
     <div className={styles.wrapper}>
       <header className={styles.header}>
-        <h1 className={styles.title}>Clientes</h1>
+        <h1 className={styles.title}>Pacientes</h1>
         <Link
           to="/clientes/nuevo"
           state={{ backgroundLocation: location }}
@@ -26,7 +26,7 @@ export function ClientListScreen() {
       <input
         className={styles.search}
         type="search"
-        placeholder="Buscar cliente…"
+        placeholder="Buscar paciente…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         inputMode="search"
@@ -35,7 +35,7 @@ export function ClientListScreen() {
       {clients.length === 0 ? (
         <EmptyState
           emoji="👋"
-          title="Aún no hay clientes"
+          title="Aún no hay pacientes"
           description="Créalos aquí o desde 'Nueva sesión'."
         />
       ) : (

@@ -1,22 +1,24 @@
 :root {
-  /* Soft, near-white palette matching marilynfuel.com: muted rose, sage, lavender */
+  /* Soft, near-white palette matching marilynfuel.com: muted rose, sage, lavender.
+     Kept low-chroma throughout — this is a refined, quiet palette, not a saturated one. */
   --color-paper: oklch(99% 0.004 90);
   --color-paper-raised: oklch(100% 0 0);
-  --color-ink: oklch(22% 0.008 30);
-  --color-ink-muted: oklch(48% 0.01 30);
-  --color-border: oklch(92% 0.007 60);
+  --color-ink: oklch(26% 0.006 30);
+  --color-ink-muted: oklch(52% 0.008 30);
+  --color-border: oklch(94% 0.005 60);
+  --color-border-subtle: oklch(96.5% 0.004 60);
 
-  --color-accent: oklch(64% 0.09 10); /* dusty rose */
-  --color-accent-soft: oklch(94% 0.025 10);
-  --color-positive: oklch(58% 0.07 150); /* sage green — paid */
-  --color-positive-soft: oklch(93% 0.03 150);
-  --color-pending: oklch(74% 0.09 75); /* soft amber */
-  --color-pending-soft: oklch(95% 0.035 75);
-  --color-negative: oklch(62% 0.1 25); /* soft coral — cancelled */
-  --color-negative-soft: oklch(94% 0.035 25);
+  --color-accent: oklch(62% 0.075 12); /* dusty rose */
+  --color-accent-soft: oklch(95% 0.02 12);
+  --color-positive: oklch(56% 0.06 150); /* sage green — paid */
+  --color-positive-soft: oklch(94% 0.025 150);
+  --color-pending: oklch(72% 0.075 75); /* soft amber */
+  --color-pending-soft: oklch(96% 0.03 75);
+  --color-negative: oklch(60% 0.085 25); /* soft coral — cancelled */
+  --color-negative-soft: oklch(95% 0.03 25);
 
-  --color-couple-a: oklch(70% 0.07 10); /* rose */
-  --color-couple-b: oklch(68% 0.06 300); /* lavender */
+  --color-couple-a: oklch(70% 0.06 12); /* rose */
+  --color-couple-b: oklch(68% 0.05 300); /* lavender */
 
   --font-display: 'Nunito', ui-rounded, system-ui, sans-serif;
   --font-body:
@@ -40,12 +42,12 @@
 
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
-  --radius-lg: 1rem;
+  --radius-lg: 1.125rem;
   --radius-pill: 999px;
 
-  --shadow-sm: 0 1px 2px oklch(30% 0.02 30 / 0.05);
-  --shadow-md: 0 8px 20px oklch(30% 0.02 30 / 0.08);
-  --shadow-lg: 0 16px 36px oklch(30% 0.02 30 / 0.14);
+  --shadow-sm: 0 1px 2px oklch(30% 0.02 30 / 0.04);
+  --shadow-md: 0 6px 16px oklch(30% 0.02 30 / 0.06);
+  --shadow-lg: 0 16px 32px oklch(30% 0.02 30 / 0.1);
 
   --duration-fast: 150ms;
   --duration-normal: 280ms;
@@ -64,15 +66,16 @@
     --color-ink: oklch(95% 0.005 90);
     --color-ink-muted: oklch(74% 0.01 60);
     --color-border: oklch(30% 0.012 40);
+    --color-border-subtle: oklch(26% 0.01 40);
 
-    --color-accent: oklch(75% 0.09 10);
-    --color-accent-soft: oklch(32% 0.05 10);
-    --color-positive: oklch(72% 0.08 150);
-    --color-positive-soft: oklch(30% 0.045 150);
-    --color-pending: oklch(78% 0.1 75);
-    --color-pending-soft: oklch(32% 0.05 75);
-    --color-negative: oklch(72% 0.09 25);
-    --color-negative-soft: oklch(32% 0.045 25);
+    --color-accent: oklch(74% 0.08 12);
+    --color-accent-soft: oklch(32% 0.045 12);
+    --color-positive: oklch(70% 0.07 150);
+    --color-positive-soft: oklch(30% 0.04 150);
+    --color-pending: oklch(76% 0.09 75);
+    --color-pending-soft: oklch(32% 0.045 75);
+    --color-negative: oklch(70% 0.08 25);
+    --color-negative-soft: oklch(32% 0.04 25);
 
     color-scheme: dark;
   }
@@ -84,15 +87,16 @@
   --color-ink: oklch(95% 0.005 90);
   --color-ink-muted: oklch(74% 0.01 60);
   --color-border: oklch(30% 0.012 40);
+  --color-border-subtle: oklch(26% 0.01 40);
 
-  --color-accent: oklch(75% 0.09 10);
-  --color-accent-soft: oklch(32% 0.05 10);
-  --color-positive: oklch(72% 0.08 150);
-  --color-positive-soft: oklch(30% 0.045 150);
-  --color-pending: oklch(78% 0.1 75);
-  --color-pending-soft: oklch(32% 0.05 75);
-  --color-negative: oklch(72% 0.09 25);
-  --color-negative-soft: oklch(32% 0.045 25);
+  --color-accent: oklch(74% 0.08 12);
+  --color-accent-soft: oklch(32% 0.045 12);
+  --color-positive: oklch(70% 0.07 150);
+  --color-positive-soft: oklch(30% 0.04 150);
+  --color-pending: oklch(76% 0.09 75);
+  --color-pending-soft: oklch(32% 0.045 75);
+  --color-negative: oklch(70% 0.08 25);
+  --color-negative-soft: oklch(32% 0.04 25);
 
   color-scheme: dark;
 }
@@ -100,18 +104,19 @@
 :root[data-theme='light'] {
   --color-paper: oklch(99% 0.004 90);
   --color-paper-raised: oklch(100% 0 0);
-  --color-ink: oklch(22% 0.008 30);
-  --color-ink-muted: oklch(48% 0.01 30);
-  --color-border: oklch(92% 0.007 60);
+  --color-ink: oklch(26% 0.006 30);
+  --color-ink-muted: oklch(52% 0.008 30);
+  --color-border: oklch(94% 0.005 60);
+  --color-border-subtle: oklch(96.5% 0.004 60);
 
-  --color-accent: oklch(64% 0.09 10);
-  --color-accent-soft: oklch(94% 0.025 10);
-  --color-positive: oklch(58% 0.07 150);
-  --color-positive-soft: oklch(93% 0.03 150);
-  --color-pending: oklch(74% 0.09 75);
-  --color-pending-soft: oklch(95% 0.035 75);
-  --color-negative: oklch(62% 0.1 25);
-  --color-negative-soft: oklch(94% 0.035 25);
+  --color-accent: oklch(62% 0.075 12);
+  --color-accent-soft: oklch(95% 0.02 12);
+  --color-positive: oklch(56% 0.06 150);
+  --color-positive-soft: oklch(94% 0.025 150);
+  --color-pending: oklch(72% 0.075 75);
+  --color-pending-soft: oklch(96% 0.03 75);
+  --color-negative: oklch(60% 0.085 25);
+  --color-negative-soft: oklch(95% 0.03 25);
 
   color-scheme: light;
 }

@@ -1,0 +1,83 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.weekdayRow {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+}
+
+.weekdayLabel {
+  text-align: center;
+  font-size: var(--text-xs);
+  color: var(--color-ink-muted);
+  font-weight: 600;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.cell {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border: none;
+  background: transparent;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--color-ink);
+  transition: background-color var(--duration-fast) var(--ease-out-expo);
+}
+
+.cell:hover {
+  background: var(--color-paper-raised);
+}
+
+.dayNumber {
+  font-size: var(--text-sm);
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.outOfMonth .dayNumber {
+  color: var(--color-border);
+}
+
+.today .dayNumber {
+  color: var(--color-accent);
+}
+
+.selected {
+  background: var(--color-accent);
+  box-shadow: var(--shadow-sm);
+}
+
+.selected .dayNumber {
+  color: var(--color-paper-raised);
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+}
+
+.dotPending {
+  background: var(--color-pending);
+}
+
+.dotOk {
+  background: var(--color-positive);
+}
+
+.selected .dot {
+  background: var(--color-paper-raised);
+}

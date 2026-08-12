@@ -4,7 +4,7 @@ import styles from './BottomNav.module.css'
 const TABS = [
   { to: '/', label: 'Hoy', icon: '☀️', end: true },
   { to: '/mes', label: 'Mes', icon: '📅', end: false },
-  { to: '/clientes', label: 'Clientes', icon: '👥', end: false },
+  { to: '/clientes', label: 'Pacientes', icon: '👥', end: false },
   { to: '/ajustes', label: 'Ajustes', icon: '⚙️', end: false },
 ]
 

@@ -34,7 +34,7 @@ export async function exportBackup(password: string): Promise<void> {
   const link = document.createElement('a')
   const dateStamp = new Date().toISOString().slice(0, 10)
   link.href = url
-  link.download = `psicoagenda-${dateStamp}.pab`
+  link.download = `erosmentis-${dateStamp}.pab`
   link.click()
   URL.revokeObjectURL(url)
 

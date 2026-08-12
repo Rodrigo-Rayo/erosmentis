@@ -12,6 +12,8 @@ import { formatCents } from '@/domain/money'
 import type { PaymentMethod } from '@/domain/types'
 import styles from './NewPackageSheet.module.css'
 
+const FOUR_SESSION_DISCOUNT_CENTS = 2000
+
 const METHODS: { value: PaymentMethod; label: string }[] = [
   { value: 'bizum', label: 'Bizum' },
   { value: 'transfer', label: 'Transferencia' },
@@ -45,7 +47,10 @@ export function NewPackageSheet() {
   }, [serviceTypes, serviceTypeId])
 
   const listPriceCents = selectedServiceType ? selectedServiceType.priceCents * totalSessions : 0
-  const effectivePriceEuros = priceEuros ?? listPriceCents / 100
+  // Her real standard offer: 4 sessions for 20€ off list price (e.g. 240€ -> 220€ for individual therapy).
+  const suggestedPriceCents =
+    totalSessions === 4 ? Math.max(0, listPriceCents - FOUR_SESSION_DISCOUNT_CENTS) : listPriceCents
+  const effectivePriceEuros = priceEuros ?? suggestedPriceCents / 100
 
   function handleClose() {
     navigate(-1)

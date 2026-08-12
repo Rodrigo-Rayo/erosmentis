@@ -184,7 +184,7 @@ export function BackupScreen() {
               )}
             </p>
             <ul className={styles.previewList}>
-              <li>{preview.counts.clients} clientes</li>
+              <li>{preview.counts.clients} pacientes</li>
               <li>{preview.counts.sessions} sesiones</li>
               <li>{preview.counts.packages} bonos</li>
               <li>{preview.counts.payments} pagos</li>

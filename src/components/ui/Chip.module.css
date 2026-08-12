@@ -2,8 +2,8 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  border: 1px solid var(--color-border);
-  background: var(--color-paper-raised);
+  border: none;
+  background: var(--color-paper);
   color: var(--color-ink-muted);
   border-radius: var(--radius-pill);
   padding: var(--space-2) var(--space-4);
@@ -13,34 +13,39 @@
   cursor: pointer;
   transition: all var(--duration-fast) var(--ease-out-expo);
   min-height: 40px;
+  box-shadow: inset 0 0 0 1px var(--color-border-subtle);
 }
 
 .chip.selected.neutral {
   background: var(--color-ink);
   color: var(--color-paper);
-  border-color: var(--color-ink);
+  box-shadow: none;
 }
 
 .chip.selected.accent {
-  background: var(--color-accent);
-  color: var(--color-paper-raised);
-  border-color: var(--color-accent);
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  font-weight: 600;
+  box-shadow: none;
 }
 
 .chip.selected.positive {
-  background: var(--color-positive);
-  color: var(--color-paper-raised);
-  border-color: var(--color-positive);
+  background: var(--color-positive-soft);
+  color: var(--color-positive);
+  font-weight: 600;
+  box-shadow: none;
 }
 
 .chip.selected.pending {
-  background: var(--color-pending);
-  color: var(--color-paper-raised);
-  border-color: var(--color-pending);
+  background: var(--color-pending-soft);
+  color: var(--color-pending);
+  font-weight: 600;
+  box-shadow: none;
 }
 
 .chip.selected.negative {
-  background: var(--color-negative);
-  color: var(--color-paper-raised);
-  border-color: var(--color-negative);
+  background: var(--color-negative-soft);
+  color: var(--color-negative);
+  font-weight: 600;
+  box-shadow: none;
 }

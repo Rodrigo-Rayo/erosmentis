@@ -7,6 +7,8 @@ interface SessionDayListProps {
   clientsById: Map<string, Client>
   serviceTypesById: Map<string, ServiceType>
   onMarkPaid: (session: Session) => void
+  /** 'asc' shows soonest/oldest day first (agenda-style); 'desc' shows most recent first (history-style). */
+  order?: 'asc' | 'desc'
 }
 
 function dayKey(timestamp: number): string {
@@ -41,14 +43,15 @@ function formatDayHeader(timestamp: number): string {
   return formatted.charAt(0).toUpperCase() + formatted.slice(1)
 }
 
-/** Groups sessions by calendar day (newest day first) and renders a date header above each group. */
+/** Groups sessions by calendar day and renders a date header above each group. */
 export function SessionDayList({
   sessions,
   clientsById,
   serviceTypesById,
   onMarkPaid,
+  order = 'desc',
 }: SessionDayListProps) {
-  const sorted = [...sessions].sort((a, b) => b.startAt - a.startAt)
+  const sorted = [...sessions].sort((a, b) => (order === 'asc' ? a.startAt - b.startAt : b.startAt - a.startAt))
   const groups: { key: string; label: string; items: Session[] }[] = []
 
   for (const session of sorted) {

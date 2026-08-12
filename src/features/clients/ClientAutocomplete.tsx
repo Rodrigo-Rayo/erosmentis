@@ -77,7 +77,7 @@ export function ClientAutocomplete({ value, onSelect, autoFocus = false }: Clien
         ref={inputRef}
         type="text"
         className={styles.input}
-        placeholder="Buscar o crear cliente…"
+        placeholder="Buscar o crear paciente…"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onFocus={() => setIsOpen(true)}
@@ -107,7 +107,7 @@ export function ClientAutocomplete({ value, onSelect, autoFocus = false }: Clien
           {query.trim() !== '' && (
             <li>
               <button type="button" className={styles.createItem} onClick={handleCreate}>
-                + Crear cliente: "{query.trim()}"
+                + Crear paciente: "{query.trim()}"
               </button>
             </li>
           )}

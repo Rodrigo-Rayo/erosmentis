@@ -21,7 +21,7 @@ import styles from './SessionDetailSheet.module.css'
 const ATTENDANCE_OPTIONS: { value: Attendance; label: string }[] = [
   { value: 'scheduled', label: 'Programada' },
   { value: 'attended', label: 'Realizada' },
-  { value: 'cancelled_by_client', label: 'Cancelada (cliente)' },
+  { value: 'cancelled_by_client', label: 'Cancelada (paciente)' },
   { value: 'cancelled_by_therapist', label: 'Cancelada (tú)' },
   { value: 'no_show', label: 'No se presentó' },
 ]

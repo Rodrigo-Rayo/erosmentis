@@ -18,9 +18,11 @@
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  border: 1px solid var(--color-border);
+  border: none;
   background: var(--color-paper-raised);
+  box-shadow: var(--shadow-sm);
   font-size: var(--text-lg);
+  color: var(--color-ink-muted);
   cursor: pointer;
 }
 
@@ -36,22 +38,22 @@
   align-items: center;
   gap: 2px;
   background: var(--color-paper-raised);
-  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  border: none;
   border-radius: var(--radius-md);
   padding: var(--space-3) var(--space-2);
   cursor: pointer;
 }
 
 .totalItemActive {
-  border-color: var(--color-pending);
   background: var(--color-pending-soft);
+  box-shadow: none;
 }
 
 .totalLabel {
   font-size: var(--text-xs);
   color: var(--color-ink-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  letter-spacing: 0.02em;
 }
 
 .totalValue {
@@ -65,6 +67,11 @@
   font-size: var(--text-lg);
   font-weight: 600;
   color: var(--color-pending);
+}
+
+.viewToggle {
+  display: flex;
+  gap: var(--space-2);
 }
 
 .list {

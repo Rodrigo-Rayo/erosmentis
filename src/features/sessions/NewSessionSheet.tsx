@@ -168,7 +168,7 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
     <Sheet title="Nueva sesión" onClose={handleClose}>
       <div className={styles.form}>
         <section className={styles.field}>
-          <label className={styles.label}>Cliente</label>
+          <label className={styles.label}>Paciente</label>
           <ClientAutocomplete value={client} onSelect={setClient} autoFocus={!presetClientId} />
         </section>
 

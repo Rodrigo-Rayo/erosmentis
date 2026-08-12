@@ -2,28 +2,34 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-3) var(--space-3);
+  padding: var(--space-3) var(--space-4);
   background: var(--color-paper-raised);
   border-radius: var(--radius-md);
-  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
   width: 100%;
   text-align: left;
   cursor: pointer;
+  transition: box-shadow var(--duration-fast) var(--ease-out-expo);
+}
+
+.row:hover {
+  box-shadow: var(--shadow-md);
 }
 
 .time {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: var(--text-lg);
-  min-width: 56px;
+  font-size: var(--text-base);
+  min-width: 50px;
   color: var(--color-ink);
 }
 
 .accent {
-  width: 4px;
+  width: 3px;
   align-self: stretch;
   border-radius: var(--radius-pill);
   background: var(--color-accent);
+  opacity: 0.55;
   flex-shrink: 0;
 }
 

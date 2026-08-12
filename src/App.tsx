@@ -10,6 +10,7 @@ import { BackupScreen } from '@/features/settings/backup/BackupScreen'
 import { NewSessionSheet } from '@/features/sessions/NewSessionSheet'
 import { SessionDetailSheet } from '@/features/sessions/SessionDetailSheet'
 import { NewClientSheet } from '@/features/clients/NewClientSheet'
+import { EditClientSheet } from '@/features/clients/EditClientSheet'
 import { NewPackageSheet } from '@/features/packages/NewPackageSheet'
 import { UpdatePrompt } from '@/pwa/UpdatePrompt'
 import { useTheme } from '@/hooks/useTheme'
@@ -104,6 +105,14 @@ export function App() {
               }
             />
             <Route
+              path="/clientes/:id/editar"
+              element={
+                <AppShell>
+                  <EditClientSheet />
+                </AppShell>
+              }
+            />
+            <Route
               path="/clientes/:clientId/bono/nuevo"
               element={
                 <AppShell>
@@ -120,6 +129,7 @@ export function App() {
           <Route path="/sesion/nueva" element={<NewSessionSheet presetClientId={navState?.presetClientId} />} />
           <Route path="/sesion/:id" element={<SessionDetailSheet />} />
           <Route path="/clientes/nuevo" element={<NewClientSheet />} />
+          <Route path="/clientes/:id/editar" element={<EditClientSheet />} />
           <Route path="/clientes/:clientId/bono/nuevo" element={<NewPackageSheet />} />
         </Routes>
       )}

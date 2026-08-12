@@ -44,7 +44,7 @@ export function SessionRow({ session, client, serviceType, onMarkPaid }: Session
       <span className={styles.time}>{time}</span>
       <span className={styles.accent} style={{ background: `var(--color-${serviceType?.colorToken ?? 'accent'})` }} />
       <span className={styles.body}>
-        <div className={styles.name}>{client?.displayName ?? 'Cliente'}</div>
+        <div className={styles.name}>{client?.displayName ?? 'Paciente'}</div>
         <div className={styles.meta}>
           <span className={styles.serviceTypeName}>{serviceType?.name ?? ''}</span>
           <span className={styles.modalityIcon}>{session.modality === 'online' ? '💻' : '🏠'}</span>

@@ -55,6 +55,27 @@ export async function createPackage(input: CreatePackageInput): Promise<Package>
   return pkg
 }
 
+/** Soft-deletes a package and its up-front payment together, so totals stay consistent. */
+export async function deletePackage(id: string): Promise<void> {
+  await db.transaction('rw', db.packages, db.payments, async () => {
+    await db.packages.update(id, { deletedAt: Date.now() })
+    const payments = await db.payments.where('packageId').equals(id).toArray()
+    await Promise.all(
+      payments
+        .filter((p) => p.deletedAt === null)
+        .map((p) => db.payments.update(p.id, { deletedAt: Date.now() })),
+    )
+  })
+}
+
+export async function restorePackage(id: string): Promise<void> {
+  await db.transaction('rw', db.packages, db.payments, async () => {
+    await db.packages.update(id, { deletedAt: null })
+    const payments = await db.payments.where('packageId').equals(id).toArray()
+    await Promise.all(payments.map((p) => db.payments.update(p.id, { deletedAt: null })))
+  })
+}
+
 export async function getActivePackagesForClient(clientId: string): Promise<Package[]> {
   const packages = await db.packages.where('[clientId+status]').equals([clientId, 'active']).toArray()
   return packages.filter((p) => p.deletedAt === null)

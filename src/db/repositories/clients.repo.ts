@@ -91,6 +91,10 @@ export async function archiveClient(id: string): Promise<void> {
   await db.clients.update(id, { status: 'archived' })
 }
 
+export async function unarchiveClient(id: string): Promise<void> {
+  await db.clients.update(id, { status: 'active' })
+}
+
 export async function softDeleteClient(id: string): Promise<void> {
   await db.clients.update(id, { deletedAt: Date.now() })
 }

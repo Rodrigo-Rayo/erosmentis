@@ -4,7 +4,7 @@ import { decryptText } from './crypto'
 
 export class InvalidBackupFileError extends Error {
   constructor() {
-    super('El archivo no es un backup válido de PsicoAgenda')
+    super('El archivo no es un backup válido de Erosmentis')
     this.name = 'InvalidBackupFileError'
   }
 }

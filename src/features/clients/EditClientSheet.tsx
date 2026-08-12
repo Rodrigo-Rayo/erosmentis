@@ -1,47 +1,83 @@
-import { useState } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useNavigate, useLocation, useParams } from 'react-router-dom'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { Sheet } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
 import { Chip } from '@/components/ui/Chip'
-import { createClient } from '@/db/repositories/clients.repo'
+import { useToast } from '@/components/ui/Toast'
+import { getClient, updateClient, archiveClient, unarchiveClient } from '@/db/repositories/clients.repo'
 import type { ClientKind } from '@/domain/types'
 import styles from './NewClientSheet.module.css'
 
-export function NewClientSheet() {
+export function EditClientSheet() {
+  const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
+  const toast = useToast()
+
+  const client = useLiveQuery(() => (id ? getClient(id) : undefined), [id])
+
   const [kind, setKind] = useState<ClientKind>('individual')
   const [nameA, setNameA] = useState('')
   const [nameB, setNameB] = useState('')
   const [phone, setPhone] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [isInitialized, setIsInitialized] = useState(false)
+
+  useEffect(() => {
+    if (client && !isInitialized) {
+      setKind(client.kind)
+      setNameA(client.people[0]?.name ?? '')
+      setNameB(client.people[1]?.name ?? '')
+      setPhone(client.people[0]?.phone ?? '')
+      setIsInitialized(true)
+    }
+  }, [client, isInitialized])
 
   function handleClose() {
     const backgroundLocation = (location.state as { backgroundLocation?: unknown } | null)
       ?.backgroundLocation
     if (backgroundLocation) {
       navigate(-1)
+    } else if (id) {
+      navigate(`/clientes/${id}`, { replace: true })
     } else {
       navigate('/clientes', { replace: true })
     }
   }
 
   async function handleSave() {
-    if (nameA.trim() === '') return
+    if (!id || nameA.trim() === '') return
     setIsSaving(true)
     const people =
       kind === 'individual'
         ? [{ name: nameA.trim(), phone: phone.trim() || undefined }]
         : [{ name: nameA.trim() }, { name: nameB.trim() }]
-    const client = await createClient({ kind, people })
+    await updateClient(id, { kind, people })
     setIsSaving(false)
-    navigate(`/clientes/${client.id}`, { replace: true })
+    toast.show('Paciente actualizado')
+    handleClose()
+  }
+
+  async function handleDelete() {
+    if (!id) return
+    await archiveClient(id)
+    toast.show('Paciente eliminado', { label: 'Deshacer', onClick: () => unarchiveClient(id) })
+    navigate('/clientes', { replace: true })
   }
 
   const canSave = nameA.trim() !== '' && (kind === 'individual' || nameB.trim() !== '') && !isSaving
 
+  if (!client) {
+    return (
+      <Sheet title="Editar paciente" onClose={handleClose}>
+        <p>Cargando…</p>
+      </Sheet>
+    )
+  }
+
   return (
-    <Sheet title="Nuevo paciente" onClose={handleClose}>
+    <Sheet title="Editar paciente" onClose={handleClose}>
       <div className={styles.form}>
         <div className={styles.chipRow}>
           <Chip selected={kind === 'individual'} tone="accent" onClick={() => setKind('individual')}>
@@ -57,7 +93,6 @@ export function NewClientSheet() {
           placeholder={kind === 'couple' ? 'Nombre de la primera persona' : 'Nombre'}
           value={nameA}
           onChange={(e) => setNameA(e.target.value)}
-          autoFocus
         />
 
         {kind === 'couple' && (
@@ -80,7 +115,10 @@ export function NewClientSheet() {
         )}
 
         <Button fullWidth onClick={handleSave} disabled={!canSave}>
-          {isSaving ? 'Guardando…' : 'Crear paciente'}
+          {isSaving ? 'Guardando…' : 'Guardar cambios'}
+        </Button>
+        <Button variant="danger" fullWidth onClick={handleDelete}>
+          Eliminar paciente
         </Button>
       </div>
     </Sheet>

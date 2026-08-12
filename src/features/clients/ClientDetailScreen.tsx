@@ -2,7 +2,12 @@ import { useParams, Link, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { getClient } from '@/db/repositories/clients.repo'
 import { listSessionsForClient, markSessionPaid } from '@/db/repositories/sessions.repo'
-import { getActivePackagesForClient, getPackageBalance } from '@/db/repositories/packages.repo'
+import {
+  getActivePackagesForClient,
+  getPackageBalance,
+  deletePackage,
+  restorePackage,
+} from '@/db/repositories/packages.repo'
 import { listPaymentsForClient } from '@/db/repositories/payments.repo'
 import { db } from '@/db/database'
 import { SessionDayList } from '@/components/list/SessionDayList'
@@ -49,6 +54,11 @@ export function ClientDetailScreen() {
     setPayingSession(null)
   }
 
+  async function handleDeletePackage(packageId: string) {
+    await deletePackage(packageId)
+    toast.show('Bono eliminado', { label: 'Deshacer', onClick: () => restorePackage(packageId) })
+  }
+
   return (
     <div className={styles.wrapper}>
       <header className={styles.header}>
@@ -56,30 +66,50 @@ export function ClientDetailScreen() {
           {client.kind === 'couple' ? '💑' : client.displayName.charAt(0).toUpperCase()}
         </span>
         <h1 className={styles.name}>{client.displayName}</h1>
-        {phone && (
-          <div className={styles.contactRow}>
-            <a href={`tel:${phone}`} className={styles.contactButton}>
-              📞 Llamar
-            </a>
-            <a
-              href={`https://wa.me/${phone.replace(/\D/g, '')}`}
-              target="_blank"
-              rel="noreferrer"
-              className={styles.contactButton}
-            >
-              💬 WhatsApp
-            </a>
-          </div>
-        )}
+        <div className={styles.contactRow}>
+          {phone && (
+            <>
+              <a href={`tel:${phone}`} className={styles.contactButton}>
+                📞 Llamar
+              </a>
+              <a
+                href={`https://wa.me/${phone.replace(/\D/g, '')}`}
+                target="_blank"
+                rel="noreferrer"
+                className={styles.contactButton}
+              >
+                💬 WhatsApp
+              </a>
+            </>
+          )}
+          <Link
+            to={`/clientes/${client.id}/editar`}
+            state={{ backgroundLocation: location }}
+            className={styles.contactButton}
+          >
+            ✎ Editar
+          </Link>
+        </div>
       </header>
 
       {activePackages[0] && packageBalance ? (
         <section className={styles.packageCard}>
-          <div className={styles.packageTitle}>{activePackages[0].label}</div>
-          <div className={styles.packageBalance}>
-            {packageBalance.used} de {activePackages[0].totalSessions} usadas
-            {packageBalance.reserved > 0 && `, ${packageBalance.reserved} reservada${packageBalance.reserved > 1 ? 's' : ''}`}
+          <div className={styles.packageCardMain}>
+            <div className={styles.packageTitle}>{activePackages[0].label}</div>
+            <div className={styles.packageBalance}>
+              {packageBalance.used} de {activePackages[0].totalSessions} usadas
+              {packageBalance.reserved > 0 &&
+                `, ${packageBalance.reserved} reservada${packageBalance.reserved > 1 ? 's' : ''}`}
+            </div>
           </div>
+          <button
+            type="button"
+            className={styles.packageDeleteButton}
+            onClick={() => handleDeletePackage(activePackages[0].id)}
+            aria-label="Eliminar bono"
+          >
+            Eliminar
+          </button>
         </section>
       ) : (
         <Link
@@ -120,6 +150,7 @@ export function ClientDetailScreen() {
             clientsById={new Map([[client.id, client]])}
             serviceTypesById={serviceTypesById}
             onMarkPaid={setPayingSession}
+            order="desc"
           />
         )}
       </section>

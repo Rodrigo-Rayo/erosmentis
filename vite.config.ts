@@ -3,7 +3,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 
-const BASE_PATH = process.env.GITHUB_PAGES ? '/psicoagenda/' : '/'
+const BASE_PATH = process.env.GITHUB_PAGES ? '/erosmentis/' : '/'
 
 export default defineConfig({
   base: BASE_PATH,
@@ -13,9 +13,9 @@ export default defineConfig({
       registerType: 'prompt',
       includeAssets: ['favicon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'PsicoAgenda',
-        short_name: 'PsicoAgenda',
-        description: 'Agenda de clientes, sesiones y pagos para consulta de psicología',
+        name: 'Erosmentis',
+        short_name: 'Erosmentis',
+        description: 'Agenda de pacientes, sesiones y pagos para consulta de psicología',
         theme_color: '#fdfbf9',
         background_color: '#fdfbf9',
         display: 'standalone',
