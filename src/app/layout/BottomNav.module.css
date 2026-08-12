@@ -24,9 +24,15 @@
 }
 
 .icon {
-  font-size: 1.25rem;
+  width: 22px;
+  height: 22px;
+  transition: transform var(--duration-fast) var(--ease-out-expo);
 }
 
 .active {
   color: var(--color-accent);
+}
+
+.active .icon {
+  transform: translateY(-1px) scale(1.05);
 }

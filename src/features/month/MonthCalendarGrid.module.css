@@ -37,7 +37,7 @@
   transition: background-color var(--duration-fast) var(--ease-out-expo);
 }
 
-.cell:hover {
+.cell:hover:not(.selected) {
   background: var(--color-paper-raised);
 }
 

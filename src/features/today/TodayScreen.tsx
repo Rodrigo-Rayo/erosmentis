@@ -48,8 +48,16 @@ export function TodayScreen() {
   return (
     <div className={styles.wrapper}>
       <header className={styles.header}>
-        <p className={styles.eyebrow}>Hoy</p>
-        <h1 className={styles.date}>{capitalize(dateLabel)}</h1>
+        <div className={styles.headerText}>
+          <p className={styles.eyebrow}>Hoy</p>
+          <h1 className={styles.date}>{capitalize(dateLabel)}</h1>
+        </div>
+        <img
+          src={`${import.meta.env.BASE_URL}icons/logo-source.png`}
+          alt=""
+          aria-hidden="true"
+          className={styles.mark}
+        />
       </header>
 
       {overduePending.length > 0 && (
