@@ -12,9 +12,11 @@ import {
   softDeleteSession,
   restoreSession,
   updateSessionAttendance,
+  updateSessionDetails,
 } from '@/db/repositories/sessions.repo'
+import { listServiceTypes } from '@/db/repositories/serviceTypes.repo'
 import { formatCents } from '@/domain/money'
-import type { Attendance, PaymentMethod } from '@/domain/types'
+import type { Attendance, Modality, PaymentMethod } from '@/domain/types'
 import { MarkPaidSheet } from './MarkPaidSheet'
 import styles from './SessionDetailSheet.module.css'
 
@@ -26,12 +28,25 @@ const ATTENDANCE_OPTIONS: { value: Attendance; label: string }[] = [
   { value: 'no_show', label: 'No se presentó' },
 ]
 
+function toLocalInputValue(date: Date): string {
+  const pad = (n: number) => n.toString().padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
 export function SessionDetailSheet() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const location = useLocation()
   const toast = useToast()
   const [showPayment, setShowPayment] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+
+  const [editServiceTypeId, setEditServiceTypeId] = useState('')
+  const [editStartAt, setEditStartAt] = useState('')
+  const [editModality, setEditModality] = useState<Modality>('online')
+  const [editPriceEuros, setEditPriceEuros] = useState('0')
+  const [editNotes, setEditNotes] = useState('')
+  const [isSaving, setIsSaving] = useState(false)
 
   const session = useLiveQuery(() => (id ? getSession(id) : undefined), [id])
   const client = useLiveQuery(
@@ -42,6 +57,17 @@ export function SessionDetailSheet() {
     () => (session ? db.serviceTypes.get(session.serviceTypeId) : undefined),
     [session?.serviceTypeId],
   )
+  const serviceTypes = useLiveQuery(() => listServiceTypes(), [], [])
+
+  function enterEditMode() {
+    if (!session) return
+    setEditServiceTypeId(session.serviceTypeId)
+    setEditStartAt(toLocalInputValue(new Date(session.startAt)))
+    setEditModality(session.modality)
+    setEditPriceEuros((session.priceCents / 100).toString())
+    setEditNotes(session.notes)
+    setIsEditing(true)
+  }
 
   function handleClose() {
     const backgroundLocation = (location.state as { backgroundLocation?: unknown } | null)
@@ -70,10 +96,110 @@ export function SessionDetailSheet() {
     setShowPayment(false)
   }
 
+  async function handleSaveEdit() {
+    if (!session) return
+    const startAt = new Date(editStartAt)
+    if (Number.isNaN(startAt.getTime())) return
+    setIsSaving(true)
+    try {
+      await updateSessionDetails(session.id, {
+        serviceTypeId: editServiceTypeId,
+        startAt: startAt.getTime(),
+        modality: editModality,
+        priceCents: Math.round((Number.parseFloat(editPriceEuros) || 0) * 100),
+        notes: editNotes,
+      })
+      toast.show('Sesión actualizada')
+      setIsEditing(false)
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
   if (!session) {
     return (
       <Sheet title="Sesión" onClose={handleClose}>
         <p>Cargando…</p>
+      </Sheet>
+    )
+  }
+
+  if (isEditing) {
+    return (
+      <Sheet title={`Editar sesión — ${client?.displayName ?? ''}`} onClose={() => setIsEditing(false)}>
+        <div className={styles.wrapper}>
+          <section className={styles.field}>
+            <label className={styles.label}>Tipo de sesión</label>
+            <div className={styles.chipRow}>
+              {serviceTypes.map((type) => (
+                <Chip
+                  key={type.id}
+                  selected={type.id === editServiceTypeId}
+                  tone="accent"
+                  onClick={() => setEditServiceTypeId(type.id)}
+                >
+                  {type.name}
+                </Chip>
+              ))}
+            </div>
+          </section>
+
+          <section className={styles.field}>
+            <label className={styles.label}>Fecha y hora</label>
+            <input
+              type="datetime-local"
+              className={styles.editInput}
+              value={editStartAt}
+              onChange={(e) => setEditStartAt(e.target.value)}
+            />
+          </section>
+
+          <section className={styles.field}>
+            <label className={styles.label}>Modalidad</label>
+            <div className={styles.chipRow}>
+              <Chip selected={editModality === 'online'} tone="accent" onClick={() => setEditModality('online')}>
+                💻 Online
+              </Chip>
+              <Chip
+                selected={editModality === 'in_person'}
+                tone="accent"
+                onClick={() => setEditModality('in_person')}
+              >
+                🏠 Presencial
+              </Chip>
+            </div>
+          </section>
+
+          <section className={styles.field}>
+            <label className={styles.label}>Precio</label>
+            <input
+              type="number"
+              inputMode="decimal"
+              className={styles.editInput}
+              value={editPriceEuros}
+              onChange={(e) => setEditPriceEuros(e.target.value)}
+            />
+          </section>
+
+          <section className={styles.field}>
+            <label className={styles.label}>Notas</label>
+            <textarea
+              className={styles.editTextarea}
+              value={editNotes}
+              onChange={(e) => setEditNotes(e.target.value)}
+              rows={3}
+            />
+          </section>
+
+          <div className={styles.actions}>
+            <Button fullWidth onClick={handleSaveEdit} disabled={isSaving}>
+              {isSaving ? 'Guardando…' : 'Guardar cambios'}
+            </Button>
+            <Button variant="secondary" fullWidth onClick={() => setIsEditing(false)}>
+              Cancelar
+            </Button>
+          </div>
+        </div>
       </Sheet>
     )
   }
@@ -84,13 +210,15 @@ export function SessionDetailSheet() {
         <div className={styles.summary}>
           <span className={styles.serviceType}>{serviceType?.name}</span>
           <span className={styles.datetime}>
-            {new Intl.DateTimeFormat('es-ES', {
-              weekday: 'long',
-              day: 'numeric',
-              month: 'long',
-              hour: '2-digit',
-              minute: '2-digit',
-            }).format(new Date(session.startAt))}
+            {capitalize(
+              new Intl.DateTimeFormat('es-ES', {
+                weekday: 'long',
+                day: 'numeric',
+                month: 'long',
+                hour: '2-digit',
+                minute: '2-digit',
+              }).format(new Date(session.startAt)),
+            )}
           </span>
           <span className={styles.price}>{formatCents(session.priceCents)}</span>
         </div>
@@ -124,6 +252,9 @@ export function SessionDetailSheet() {
               Marcar como cobrada
             </Button>
           )}
+          <Button variant="secondary" fullWidth onClick={enterEditMode}>
+            Editar sesión
+          </Button>
           <Button variant="danger" fullWidth onClick={handleDelete}>
             Eliminar sesión
           </Button>
@@ -139,4 +270,8 @@ export function SessionDetailSheet() {
       )}
     </Sheet>
   )
+}
+
+function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1)
 }

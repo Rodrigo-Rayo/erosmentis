@@ -11,6 +11,7 @@ import {
   listSessionsForClient,
   markSessionPaid,
   updateSessionAttendance,
+  updateSessionDetails,
 } from '@/db/repositories/sessions.repo'
 import { listPaymentsForClient } from '@/db/repositories/payments.repo'
 
@@ -138,5 +139,37 @@ describe('createWeeklySeries', () => {
 
     const history = await listSessionsForClient(client.id)
     expect(history).toHaveLength(3)
+  })
+})
+
+describe('updateSessionDetails', () => {
+  it('corrects a mistaken date, price, modality and notes without deleting the session', async () => {
+    const client = await createClient({ kind: 'individual', people: [{ name: 'Rocío Peña' }] })
+    const serviceType = await getIndividualServiceType()
+    const otherServiceType = (await listServiceTypes()).find((t) => t.id !== serviceType.id)!
+
+    const session = await createSession({
+      clientId: client.id,
+      serviceTypeId: serviceType.id,
+      startAt: Date.UTC(2026, 7, 12, 17, 0),
+      modality: 'online',
+    })
+
+    const newStartAt = Date.UTC(2026, 7, 13, 18, 30)
+    await updateSessionDetails(session.id, {
+      serviceTypeId: otherServiceType.id,
+      startAt: newStartAt,
+      modality: 'in_person',
+      priceCents: 7000,
+      notes: 'Cambio de última hora',
+    })
+
+    const updated = await db.sessions.get(session.id)
+    expect(updated?.serviceTypeId).toBe(otherServiceType.id)
+    expect(updated?.startAt).toBe(newStartAt)
+    expect(updated?.modality).toBe('in_person')
+    expect(updated?.priceCents).toBe(7000)
+    expect(updated?.notes).toBe('Cambio de última hora')
+    expect(updated?.deletedAt).toBeNull()
   })
 })

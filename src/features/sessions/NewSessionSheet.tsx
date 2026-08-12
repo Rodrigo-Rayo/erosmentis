@@ -46,7 +46,9 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
   const [showMore, setShowMore] = useState(false)
   const [notes, setNotes] = useState('')
   const [repeatWeekly, setRepeatWeekly] = useState(false)
-  const [repeatWeeks, setRepeatWeeks] = useState(4)
+  const [repeatIntervalWeeks, setRepeatIntervalWeeks] = useState(1)
+  const [repeatWeeksInput, setRepeatWeeksInput] = useState('4')
+  const repeatWeeks = Math.min(26, Math.max(1, Number.parseInt(repeatWeeksInput, 10) || 1))
   const [isSaving, setIsSaving] = useState(false)
 
   const serviceTypes = useLiveQuery(() => listServiceTypes(), [], [])
@@ -133,6 +135,7 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
             usePackage,
           },
           repeatWeeks,
+          repeatIntervalWeeks,
         )
         toast.show(`${sessions.length} sesiones creadas`, {
           label: 'Deshacer',
@@ -258,10 +261,14 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
             <section className={styles.field}>
               <label className={styles.label}>Modalidad</label>
               <div className={styles.chipRow}>
-                <Chip selected={modality === 'online'} onClick={() => setModality('online')}>
+                <Chip selected={modality === 'online'} tone="accent" onClick={() => setModality('online')}>
                   💻 Online
                 </Chip>
-                <Chip selected={modality === 'in_person'} onClick={() => setModality('in_person')}>
+                <Chip
+                  selected={modality === 'in_person'}
+                  tone="accent"
+                  onClick={() => setModality('in_person')}
+                >
                   🏠 Presencial
                 </Chip>
               </div>
@@ -274,20 +281,37 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
                   checked={repeatWeekly}
                   onChange={(e) => setRepeatWeekly(e.target.checked)}
                 />
-                Repetir cada semana
+                Repetir sesión
               </label>
               {repeatWeekly && (
-                <div className={styles.repeatRow}>
-                  <input
-                    type="number"
-                    min={1}
-                    max={26}
-                    className={styles.repeatInput}
-                    value={repeatWeeks}
-                    onChange={(e) => setRepeatWeeks(Number(e.target.value) || 1)}
-                  />
-                  <span>semanas</span>
-                </div>
+                <>
+                  <div className={styles.chipRow}>
+                    <Chip selected={repeatIntervalWeeks === 1} tone="accent" onClick={() => setRepeatIntervalWeeks(1)}>
+                      Cada semana
+                    </Chip>
+                    <Chip selected={repeatIntervalWeeks === 2} tone="accent" onClick={() => setRepeatIntervalWeeks(2)}>
+                      Cada 2 semanas
+                    </Chip>
+                    <Chip selected={repeatIntervalWeeks === 3} tone="accent" onClick={() => setRepeatIntervalWeeks(3)}>
+                      Cada 3 semanas
+                    </Chip>
+                    <Chip selected={repeatIntervalWeeks === 4} tone="accent" onClick={() => setRepeatIntervalWeeks(4)}>
+                      Cada mes
+                    </Chip>
+                  </div>
+                  <div className={styles.repeatRow}>
+                    <input
+                      type="number"
+                      min={1}
+                      max={26}
+                      className={styles.repeatInput}
+                      value={repeatWeeksInput}
+                      onChange={(e) => setRepeatWeeksInput(e.target.value)}
+                      onBlur={() => setRepeatWeeksInput(String(repeatWeeks))}
+                    />
+                    <span>veces</span>
+                  </div>
+                </>
               )}
             </section>
 

@@ -67,7 +67,7 @@ export function nextHalfHourBoundary(from = new Date()): Date {
   return result
 }
 
-export function generateWeeklyOccurrences(startAt: number, count: number): number[] {
+export function generateWeeklyOccurrences(startAt: number, count: number, intervalWeeks = 1): number[] {
   if (count <= 0) {
     return []
   }
@@ -75,7 +75,7 @@ export function generateWeeklyOccurrences(startAt: number, count: number): numbe
   let cursor = new Date(startAt)
   for (let i = 0; i < count; i += 1) {
     occurrences.push(cursor.getTime())
-    cursor = addWeeks(cursor, 1)
+    cursor = addWeeks(cursor, intervalWeeks)
   }
   return occurrences
 }

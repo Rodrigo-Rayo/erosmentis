@@ -66,9 +66,10 @@ export async function createSession(input: CreateSessionInput): Promise<Session>
 export async function createWeeklySeries(
   input: Omit<CreateSessionInput, 'seriesId'>,
   occurrenceCount: number,
+  intervalWeeks = 1,
 ): Promise<Session[]> {
   const seriesId = crypto.randomUUID()
-  const startTimes = generateWeeklyOccurrences(input.startAt, occurrenceCount)
+  const startTimes = generateWeeklyOccurrences(input.startAt, occurrenceCount, intervalWeeks)
   const sessions: Session[] = []
   for (const startAt of startTimes) {
     // Sequential on purpose: each occurrence may consume the same package slot.
@@ -154,6 +155,23 @@ export async function updateSessionAttendance(
 
 export async function updateSessionNotes(sessionId: string, notes: string): Promise<void> {
   await db.sessions.update(sessionId, { notes })
+}
+
+export interface UpdateSessionDetailsInput {
+  serviceTypeId?: string
+  startAt?: number
+  durationMin?: number
+  modality?: Modality
+  priceCents?: number
+  notes?: string
+}
+
+/** Corrects a mistake on an existing session (wrong day, price, service type…) without deleting it. */
+export async function updateSessionDetails(
+  sessionId: string,
+  changes: UpdateSessionDetailsInput,
+): Promise<void> {
+  await db.sessions.update(sessionId, changes)
 }
 
 export async function softDeleteSession(sessionId: string): Promise<void> {

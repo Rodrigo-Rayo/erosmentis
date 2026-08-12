@@ -20,7 +20,6 @@
 
 .datetime {
   color: var(--color-ink-muted);
-  text-transform: capitalize;
 }
 
 .price {
@@ -53,6 +52,26 @@
   background: var(--color-paper-raised);
   border-radius: var(--radius-md);
   padding: var(--space-3);
+}
+
+.editInput {
+  border: 1px solid var(--color-border);
+  background: var(--color-paper-raised);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-base);
+  font-family: inherit;
+  min-height: 48px;
+}
+
+.editTextarea {
+  border: 1px solid var(--color-border);
+  background: var(--color-paper-raised);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-family: inherit;
+  font-size: var(--text-base);
+  resize: vertical;
 }
 
 .actions {
