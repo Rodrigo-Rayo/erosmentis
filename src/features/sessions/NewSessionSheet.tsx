@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/Toast'
 import { ClientAutocomplete } from '@/features/clients/ClientAutocomplete'
 import { listServiceTypes } from '@/db/repositories/serviceTypes.repo'
 import { findConsumablePackage, getPackageBalance } from '@/db/repositories/packages.repo'
+import { getClient } from '@/db/repositories/clients.repo'
 import {
   createSession,
   createWeeklySeries,
@@ -70,9 +71,7 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
   // Preselect a client when the sheet is opened from a client's own detail screen.
   useEffect(() => {
     if (!presetClientId) return
-    import('@/db/repositories/clients.repo').then(({ getClient }) => {
-      getClient(presetClientId).then((c) => c && setClient(c))
-    })
+    getClient(presetClientId).then((c) => c && setClient(c))
   }, [presetClientId])
 
   // Smart default for service type: the client's own default, else their most recent session type, else the first active type.
