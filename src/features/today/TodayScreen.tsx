@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db/database'
-import { useBackupReminder } from '@/hooks/useBackupReminder'
 import { dayRange } from '@/domain/dates'
 import { pendingSessions } from '@/domain/totals'
 import { listSessionsInRange, markSessionPaid } from '@/db/repositories/sessions.repo'
@@ -17,7 +15,6 @@ import styles from './TodayScreen.module.css'
 export function TodayScreen() {
   const toast = useToast()
   const [payingSession, setPayingSession] = useState<Session | null>(null)
-  const { needsBackup, daysSinceBackup } = useBackupReminder()
   const today = dayRange(new Date())
 
   const sessions = useLiveQuery(() => listSessionsInRange(today.start, today.end), [today.start], [])
@@ -54,17 +51,6 @@ export function TodayScreen() {
         <p className={styles.eyebrow}>Hoy</p>
         <h1 className={styles.date}>{capitalize(dateLabel)}</h1>
       </header>
-
-      {needsBackup && clients.length > 0 && (
-        <Link to="/ajustes/backup" className={styles.backupNudge}>
-          <span>
-            {daysSinceBackup === null
-              ? 'Aún no has hecho ninguna copia de seguridad'
-              : `Hace ${daysSinceBackup} días de tu última copia de seguridad`}
-          </span>
-          <span className={styles.backupNudgeAction}>Hacer copia →</span>
-        </Link>
-      )}
 
       {overduePending.length > 0 && (
         <section className={styles.pendingBanner}>

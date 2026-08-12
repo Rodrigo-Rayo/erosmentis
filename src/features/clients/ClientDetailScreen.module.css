@@ -121,9 +121,3 @@
 .historyTitle {
   font-size: var(--text-lg);
 }
-
-.list {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}

@@ -5,7 +5,7 @@ import { listSessionsForClient, markSessionPaid } from '@/db/repositories/sessio
 import { getActivePackagesForClient, getPackageBalance } from '@/db/repositories/packages.repo'
 import { listPaymentsForClient } from '@/db/repositories/payments.repo'
 import { db } from '@/db/database'
-import { SessionRow } from '@/components/list/SessionRow'
+import { SessionDayList } from '@/components/list/SessionDayList'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { formatCents, sumCents } from '@/domain/money'
 import { isSessionBillable } from '@/domain/pricing'
@@ -115,17 +115,12 @@ export function ClientDetailScreen() {
         {sessions.length === 0 ? (
           <EmptyState emoji="📋" title="Sin sesiones aún" />
         ) : (
-          <div className={styles.list}>
-            {sessions.map((session) => (
-              <SessionRow
-                key={session.id}
-                session={session}
-                client={client}
-                serviceType={serviceTypesById.get(session.serviceTypeId)}
-                onMarkPaid={setPayingSession}
-              />
-            ))}
-          </div>
+          <SessionDayList
+            sessions={sessions}
+            clientsById={new Map([[client.id, client]])}
+            serviceTypesById={serviceTypesById}
+            onMarkPaid={setPayingSession}
+          />
         )}
       </section>
 

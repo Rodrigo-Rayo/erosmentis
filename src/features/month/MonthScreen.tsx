@@ -6,7 +6,7 @@ import { calculateMonthTotals } from '@/domain/totals'
 import { isSessionBillable } from '@/domain/pricing'
 import { listSessionsInRange, markSessionPaid } from '@/db/repositories/sessions.repo'
 import { listPaymentsInRange } from '@/db/repositories/payments.repo'
-import { SessionRow } from '@/components/list/SessionRow'
+import { SessionDayList } from '@/components/list/SessionDayList'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { MarkPaidSheet } from '@/features/sessions/MarkPaidSheet'
 import { useToast } from '@/components/ui/Toast'
@@ -87,18 +87,12 @@ export function MonthScreen() {
             title={showPendingOnly ? 'Nada pendiente de cobro' : 'Sin sesiones este mes'}
           />
         ) : (
-          visibleSessions
-            .slice()
-            .sort((a, b) => b.startAt - a.startAt)
-            .map((session) => (
-              <SessionRow
-                key={session.id}
-                session={session}
-                client={clientsById.get(session.clientId)}
-                serviceType={serviceTypesById.get(session.serviceTypeId)}
-                onMarkPaid={setPayingSession}
-              />
-            ))
+          <SessionDayList
+            sessions={visibleSessions}
+            clientsById={clientsById}
+            serviceTypesById={serviceTypesById}
+            onMarkPaid={setPayingSession}
+          />
         )}
       </section>
 

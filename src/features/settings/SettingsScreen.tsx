@@ -1,12 +1,10 @@
 import { Link } from 'react-router-dom'
 import { Chip } from '@/components/ui/Chip'
 import { useTheme } from '@/hooks/useTheme'
-import { useBackupReminder } from '@/hooks/useBackupReminder'
 import styles from './SettingsScreen.module.css'
 
 export function SettingsScreen() {
   const { theme, setTheme } = useTheme()
-  const { needsBackup, daysSinceBackup } = useBackupReminder()
 
   return (
     <div className={styles.wrapper}>
@@ -33,13 +31,6 @@ export function SettingsScreen() {
           Todos tus datos se guardan solo en este dispositivo. Haz copias de seguridad
           regularmente para no perderlos si pierdes o cambias de móvil.
         </p>
-        {needsBackup && (
-          <p className={styles.nudge}>
-            {daysSinceBackup === null
-              ? 'Aún no has hecho ninguna copia de seguridad.'
-              : `Han pasado ${daysSinceBackup} días desde tu última copia.`}
-          </p>
-        )}
         <Link to="/ajustes/backup" className={styles.backupLink}>
           Copia de seguridad y restaurar →
         </Link>
