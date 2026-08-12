@@ -15,6 +15,7 @@ import {
   updateSessionDetails,
 } from '@/db/repositories/sessions.repo'
 import { listServiceTypes } from '@/db/repositories/serviceTypes.repo'
+import { downloadSessionReminder } from './reminderExport'
 import { formatCents } from '@/domain/money'
 import type { Attendance, Modality, PaymentMethod } from '@/domain/types'
 import { MarkPaidSheet } from './MarkPaidSheet'
@@ -252,6 +253,13 @@ export function SessionDetailSheet() {
               Marcar como cobrada
             </Button>
           )}
+          <Button
+            variant="secondary"
+            fullWidth
+            onClick={() => downloadSessionReminder(session, client, serviceType)}
+          >
+            📅 Añadir recordatorio al calendario
+          </Button>
           <Button variant="secondary" fullWidth onClick={enterEditMode}>
             Editar sesión
           </Button>

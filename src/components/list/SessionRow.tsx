@@ -1,3 +1,4 @@
+import type { KeyboardEvent } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { formatCents } from '@/domain/money'
 import type { Client, ServiceType, Session } from '@/domain/types'
@@ -39,8 +40,21 @@ export function SessionRow({ session, client, serviceType, onMarkPaid }: Session
     navigate(`/sesion/${session.id}`, { state: { backgroundLocation: location } })
   }
 
+  function handleKeyDown(e: KeyboardEvent<HTMLDivElement>) {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      openDetail()
+    }
+  }
+
   return (
-    <button type="button" className={styles.row} onClick={openDetail}>
+    <div
+      role="button"
+      tabIndex={0}
+      className={styles.row}
+      onClick={openDetail}
+      onKeyDown={handleKeyDown}
+    >
       <span className={styles.time}>{time}</span>
       <span className={styles.accent} style={{ background: `var(--color-${serviceType?.colorToken ?? 'accent'})` }} />
       <span className={styles.body}>
@@ -70,6 +84,6 @@ export function SessionRow({ session, client, serviceType, onMarkPaid }: Session
       ) : (
         <span className={styles.price}>{formatCents(session.priceCents)}</span>
       )}
-    </button>
+    </div>
   )
 }

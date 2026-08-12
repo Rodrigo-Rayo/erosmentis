@@ -9,6 +9,7 @@ import { ClientAutocomplete } from '@/features/clients/ClientAutocomplete'
 import { listServiceTypes } from '@/db/repositories/serviceTypes.repo'
 import { findConsumablePackage, getPackageBalance } from '@/db/repositories/packages.repo'
 import { getClient } from '@/db/repositories/clients.repo'
+import { downloadSessionReminder, downloadSessionsReminder } from './reminderExport'
 import {
   createSession,
   createWeeklySeries,
@@ -45,6 +46,7 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
   const [customPriceCents, setCustomPriceCents] = useState<number | null>(null)
   const [showMore, setShowMore] = useState(false)
   const [notes, setNotes] = useState('')
+  const [addReminder, setAddReminder] = useState(true)
   const [repeatWeekly, setRepeatWeekly] = useState(false)
   const [repeatIntervalWeeks, setRepeatIntervalWeeks] = useState(1)
   const [repeatWeeksInput, setRepeatWeeksInput] = useState('4')
@@ -137,6 +139,9 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
           repeatWeeks,
           repeatIntervalWeeks,
         )
+        if (addReminder) {
+          downloadSessionsReminder(sessions, client, selectedServiceType ?? undefined)
+        }
         toast.show(`${sessions.length} sesiones creadas`, {
           label: 'Deshacer',
           onClick: () => {
@@ -152,6 +157,9 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
           notes,
           usePackage,
         })
+        if (addReminder) {
+          downloadSessionReminder(session, client, selectedServiceType ?? undefined)
+        }
         toast.show('Sesión guardada', {
           label: 'Deshacer',
           onClick: () => softDeleteSession(session.id),
@@ -327,6 +335,11 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
             </section>
           </div>
         )}
+
+        <label className={styles.packageToggle}>
+          <input type="checkbox" checked={addReminder} onChange={(e) => setAddReminder(e.target.checked)} />
+          📅 Recordarme por calendario (24h y 1h antes)
+        </label>
 
         <Button fullWidth onClick={handleSave} disabled={!canSave}>
           {isSaving ? 'Guardando…' : 'Guardar sesión'}
