@@ -12,10 +12,12 @@ import {
   restoreReplace,
   type RestorePreview,
 } from './importBackup'
+import { getErrorMessage } from '@/domain/errors'
 import type { BackupPayload } from '@/domain/schemas'
 import styles from './BackupScreen.module.css'
 
 type ExportStep = 'idle' | 'password' | 'confirm'
+const MIN_PASSWORD_LENGTH = 10
 
 export function BackupScreen() {
   const toast = useToast()
@@ -34,7 +36,8 @@ export function BackupScreen() {
   const [preview, setPreview] = useState<RestorePreview | null>(null)
   const [isImporting, setIsImporting] = useState(false)
 
-  const passwordsMatch = exportPassword.length >= 4 && exportPassword === exportPasswordConfirm
+  const passwordsMatch =
+    exportPassword.length >= MIN_PASSWORD_LENGTH && exportPassword === exportPasswordConfirm
 
   async function handleExport() {
     setIsExporting(true)
@@ -44,6 +47,8 @@ export function BackupScreen() {
       setExportStep('idle')
       setExportPassword('')
       setExportPasswordConfirm('')
+    } catch (error) {
+      toast.show(getErrorMessage(error))
     } finally {
       setIsExporting(false)
     }
@@ -66,7 +71,7 @@ export function BackupScreen() {
       setPendingPayload(payload)
       setPreview(previewBackup(payload))
     } catch (error) {
-      setImportError(error instanceof Error ? error.message : 'No se pudo leer el archivo')
+      setImportError(getErrorMessage(error))
     } finally {
       setIsImporting(false)
     }
@@ -78,16 +83,24 @@ export function BackupScreen() {
     try {
       if (mode === 'replace') {
         const undo = await restoreReplace(pendingPayload)
-        toast.show('Datos restaurados', { label: 'Deshacer', onClick: undo })
+        toast.show('Datos restaurados', {
+          label: 'Deshacer',
+          onClick: () => undo().catch((error: unknown) => toast.show(getErrorMessage(error))),
+        })
       } else {
-        await restoreMerge(pendingPayload)
-        toast.show('Datos combinados con los existentes')
+        const undo = await restoreMerge(pendingPayload)
+        toast.show('Datos combinados', {
+          label: 'Deshacer',
+          onClick: () => undo().catch((error: unknown) => toast.show(getErrorMessage(error))),
+        })
       }
       setPendingPayload(null)
       setPreview(null)
       setImportFile(null)
       setImportPassword('')
       if (fileInputRef.current) fileInputRef.current.value = ''
+    } catch (error) {
+      toast.show(getErrorMessage(error))
     } finally {
       setIsImporting(false)
     }
@@ -125,7 +138,7 @@ export function BackupScreen() {
             <input
               type="password"
               className={styles.input}
-              placeholder="Contraseña (mínimo 4 caracteres)"
+              placeholder={`Contraseña (mínimo ${MIN_PASSWORD_LENGTH} caracteres)`}
               value={exportPassword}
               onChange={(e) => setExportPassword(e.target.value)}
             />

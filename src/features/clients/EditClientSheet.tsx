@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Chip } from '@/components/ui/Chip'
 import { useToast } from '@/components/ui/Toast'
 import { getClient, updateClient, archiveClient, unarchiveClient } from '@/db/repositories/clients.repo'
+import { getErrorMessage } from '@/domain/errors'
 import type { ClientKind } from '@/domain/types'
 import styles from './NewClientSheet.module.css'
 
@@ -49,21 +50,33 @@ export function EditClientSheet() {
   async function handleSave() {
     if (!id || nameA.trim() === '') return
     setIsSaving(true)
-    const people =
-      kind === 'individual'
-        ? [{ name: nameA.trim(), phone: phone.trim() || undefined }]
-        : [{ name: nameA.trim() }, { name: nameB.trim() }]
-    await updateClient(id, { kind, people })
-    setIsSaving(false)
-    toast.show('Paciente actualizado')
-    handleClose()
+    try {
+      const people =
+        kind === 'individual'
+          ? [{ name: nameA.trim(), phone: phone.trim() || undefined }]
+          : [{ name: nameA.trim() }, { name: nameB.trim() }]
+      await updateClient(id, { kind, people })
+      toast.show('Paciente actualizado')
+      handleClose()
+    } catch (error) {
+      toast.show(getErrorMessage(error))
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   async function handleDelete() {
     if (!id) return
-    await archiveClient(id)
-    toast.show('Paciente eliminado', { label: 'Deshacer', onClick: () => unarchiveClient(id) })
-    navigate('/clientes', { replace: true })
+    try {
+      await archiveClient(id)
+      toast.show('Paciente eliminado', {
+        label: 'Deshacer',
+        onClick: () => unarchiveClient(id).catch((error: unknown) => toast.show(getErrorMessage(error))),
+      })
+      navigate('/clientes', { replace: true })
+    } catch (error) {
+      toast.show(getErrorMessage(error))
+    }
   }
 
   const canSave = nameA.trim() !== '' && (kind === 'individual' || nameB.trim() !== '') && !isSaving

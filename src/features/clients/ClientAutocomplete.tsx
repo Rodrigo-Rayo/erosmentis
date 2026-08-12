@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { createClient, searchClients } from '@/db/repositories/clients.repo'
 import { listSessionsInRange } from '@/db/repositories/sessions.repo'
+import { useToast } from '@/components/ui/Toast'
+import { getErrorMessage } from '@/domain/errors'
 import type { Client } from '@/domain/types'
 import styles from './ClientAutocomplete.module.css'
 
@@ -26,6 +28,7 @@ async function getRecentClientIds(): Promise<string[]> {
 }
 
 export function ClientAutocomplete({ value, onSelect, autoFocus = false }: ClientAutocompleteProps) {
+  const toast = useToast()
   const [query, setQuery] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -46,10 +49,14 @@ export function ClientAutocomplete({ value, onSelect, autoFocus = false }: Clien
   async function handleCreate() {
     const trimmed = query.trim()
     if (trimmed === '') return
-    const client = await createClient({ kind: 'individual', people: [{ name: trimmed }] })
-    onSelect(client)
-    setIsOpen(false)
-    setQuery('')
+    try {
+      const client = await createClient({ kind: 'individual', people: [{ name: trimmed }] })
+      onSelect(client)
+      setIsOpen(false)
+      setQuery('')
+    } catch (error) {
+      toast.show(getErrorMessage(error))
+    }
   }
 
   if (value && !isOpen) {

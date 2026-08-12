@@ -172,4 +172,66 @@ describe('updateSessionDetails', () => {
     expect(updated?.notes).toBe('Cambio de última hora')
     expect(updated?.deletedAt).toBeNull()
   })
+
+  it('allows editing date, modality and notes on a bono-covered session', async () => {
+    const client = await createClient({ kind: 'individual', people: [{ name: 'Nuria Soler' }] })
+    const serviceType = await getIndividualServiceType()
+    await createPackage({
+      clientId: client.id,
+      serviceTypeId: serviceType.id,
+      label: 'Bono 4 sesiones',
+      totalSessions: 4,
+      pricePaidCents: 22000,
+      paymentMethod: 'bizum',
+    })
+    const session = await createSession({
+      clientId: client.id,
+      serviceTypeId: serviceType.id,
+      startAt: Date.UTC(2026, 7, 12, 17, 0),
+      modality: 'online',
+      usePackage: true,
+    })
+
+    const newStartAt = Date.UTC(2026, 7, 13, 18, 0)
+    await updateSessionDetails(session.id, { startAt: newStartAt, modality: 'in_person', notes: 'Reagendada' })
+
+    const updated = await db.sessions.get(session.id)
+    expect(updated?.startAt).toBe(newStartAt)
+    expect(updated?.modality).toBe('in_person')
+    expect(updated?.notes).toBe('Reagendada')
+    // Price/package linkage must stay exactly as the package priced it.
+    expect(updated?.priceCents).toBe(5500)
+    expect(updated?.paymentStatus).toBe('package')
+  })
+
+  it('rejects editing price or service type on a bono-covered session', async () => {
+    const client = await createClient({ kind: 'individual', people: [{ name: 'Nuria Soler' }] })
+    const serviceType = await getIndividualServiceType()
+    const otherServiceType = (await listServiceTypes()).find((t) => t.id !== serviceType.id)!
+    await createPackage({
+      clientId: client.id,
+      serviceTypeId: serviceType.id,
+      label: 'Bono 4 sesiones',
+      totalSessions: 4,
+      pricePaidCents: 22000,
+      paymentMethod: 'bizum',
+    })
+    const session = await createSession({
+      clientId: client.id,
+      serviceTypeId: serviceType.id,
+      startAt: Date.now(),
+      modality: 'online',
+      usePackage: true,
+    })
+
+    await expect(updateSessionDetails(session.id, { priceCents: 9999 })).rejects.toThrow(/bono/i)
+    await expect(
+      updateSessionDetails(session.id, { serviceTypeId: otherServiceType.id }),
+    ).rejects.toThrow(/bono/i)
+
+    // Neither rejected call should have partially applied.
+    const untouched = await db.sessions.get(session.id)
+    expect(untouched?.priceCents).toBe(5500)
+    expect(untouched?.serviceTypeId).toBe(serviceType.id)
+  })
 })

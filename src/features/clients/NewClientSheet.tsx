@@ -3,13 +3,16 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { Sheet } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
 import { Chip } from '@/components/ui/Chip'
+import { useToast } from '@/components/ui/Toast'
 import { createClient } from '@/db/repositories/clients.repo'
+import { getErrorMessage } from '@/domain/errors'
 import type { ClientKind } from '@/domain/types'
 import styles from './NewClientSheet.module.css'
 
 export function NewClientSheet() {
   const navigate = useNavigate()
   const location = useLocation()
+  const toast = useToast()
   const [kind, setKind] = useState<ClientKind>('individual')
   const [nameA, setNameA] = useState('')
   const [nameB, setNameB] = useState('')
@@ -29,13 +32,18 @@ export function NewClientSheet() {
   async function handleSave() {
     if (nameA.trim() === '') return
     setIsSaving(true)
-    const people =
-      kind === 'individual'
-        ? [{ name: nameA.trim(), phone: phone.trim() || undefined }]
-        : [{ name: nameA.trim() }, { name: nameB.trim() }]
-    const client = await createClient({ kind, people })
-    setIsSaving(false)
-    navigate(`/clientes/${client.id}`, { replace: true })
+    try {
+      const people =
+        kind === 'individual'
+          ? [{ name: nameA.trim(), phone: phone.trim() || undefined }]
+          : [{ name: nameA.trim() }, { name: nameB.trim() }]
+      const client = await createClient({ kind, people })
+      navigate(`/clientes/${client.id}`, { replace: true })
+    } catch (error) {
+      toast.show(getErrorMessage(error))
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   const canSave = nameA.trim() !== '' && (kind === 'individual' || nameB.trim() !== '') && !isSaving

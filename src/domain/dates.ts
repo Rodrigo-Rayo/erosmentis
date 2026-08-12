@@ -83,3 +83,10 @@ export function generateWeeklyOccurrences(startAt: number, count: number, interv
 export function shiftDays(timestamp: number, days: number): number {
   return addDays(new Date(timestamp), days).getTime()
 }
+
+/** Capitalizes only the first character — Spanish Intl.DateTimeFormat output is lowercase
+ * ("miércoles, 12 de agosto"), and CSS text-transform:capitalize would wrongly title-case
+ * every word ("De Agosto"). */
+export function capitalize(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}

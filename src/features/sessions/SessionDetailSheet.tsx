@@ -17,6 +17,9 @@ import {
 import { listServiceTypes } from '@/db/repositories/serviceTypes.repo'
 import { downloadSessionReminder } from './reminderExport'
 import { formatCents } from '@/domain/money'
+import { getErrorMessage } from '@/domain/errors'
+import { capitalize } from '@/domain/dates'
+import { useNotFoundAfterDelay } from '@/hooks/useNotFoundAfterDelay'
 import type { Attendance, Modality, PaymentMethod } from '@/domain/types'
 import { MarkPaidSheet } from './MarkPaidSheet'
 import styles from './SessionDetailSheet.module.css'
@@ -50,6 +53,7 @@ export function SessionDetailSheet() {
   const [isSaving, setIsSaving] = useState(false)
 
   const session = useLiveQuery(() => (id ? getSession(id) : undefined), [id])
+  const sessionNotFound = useNotFoundAfterDelay(session)
   const client = useLiveQuery(
     () => (session ? db.clients.get(session.clientId) : undefined),
     [session?.clientId],
@@ -82,19 +86,28 @@ export function SessionDetailSheet() {
 
   async function handleDelete() {
     if (!session) return
-    await softDeleteSession(session.id)
-    toast.show('Sesión eliminada', {
-      label: 'Deshacer',
-      onClick: () => restoreSession(session.id),
-    })
-    handleClose()
+    try {
+      await softDeleteSession(session.id)
+      toast.show('Sesión eliminada', {
+        label: 'Deshacer',
+        onClick: () => restoreSession(session.id),
+      })
+      handleClose()
+    } catch (error) {
+      toast.show(getErrorMessage(error))
+    }
   }
 
   async function handlePaymentConfirm(method: PaymentMethod) {
     if (!session) return
-    await markSessionPaid({ sessionId: session.id, method })
-    toast.show('Cobro registrado')
-    setShowPayment(false)
+    try {
+      await markSessionPaid({ sessionId: session.id, method })
+      toast.show('Cobro registrado')
+    } catch (error) {
+      toast.show(getErrorMessage(error))
+    } finally {
+      setShowPayment(false)
+    }
   }
 
   async function handleSaveEdit() {
@@ -103,24 +116,42 @@ export function SessionDetailSheet() {
     if (Number.isNaN(startAt.getTime())) return
     setIsSaving(true)
     try {
+      const isPackageSession = session.paymentStatus === 'package'
       await updateSessionDetails(session.id, {
-        serviceTypeId: editServiceTypeId,
+        ...(isPackageSession ? {} : { serviceTypeId: editServiceTypeId, priceCents: Math.round((Number.parseFloat(editPriceEuros) || 0) * 100) }),
         startAt: startAt.getTime(),
         modality: editModality,
-        priceCents: Math.round((Number.parseFloat(editPriceEuros) || 0) * 100),
         notes: editNotes,
       })
       toast.show('Sesión actualizada')
       setIsEditing(false)
+    } catch (error) {
+      toast.show(getErrorMessage(error))
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  function handleAttendanceChange(attendance: Attendance) {
+    if (!session) return
+    updateSessionAttendance(session.id, attendance).catch((error: unknown) =>
+      toast.show(getErrorMessage(error)),
+    )
+  }
+
+  function handleAddReminder() {
+    if (!session) return
+    try {
+      downloadSessionReminder(session, client, serviceType)
+    } catch (error) {
+      toast.show(getErrorMessage(error))
     }
   }
 
   if (!session) {
     return (
       <Sheet title="Sesión" onClose={handleClose}>
-        <p>Cargando…</p>
+        <p>{sessionNotFound ? 'No se ha encontrado esta sesión. Puede que ya se haya eliminado.' : 'Cargando…'}</p>
       </Sheet>
     )
   }
@@ -129,21 +160,27 @@ export function SessionDetailSheet() {
     return (
       <Sheet title={`Editar sesión — ${client?.displayName ?? ''}`} onClose={() => setIsEditing(false)}>
         <div className={styles.wrapper}>
-          <section className={styles.field}>
-            <label className={styles.label}>Tipo de sesión</label>
-            <div className={styles.chipRow}>
-              {serviceTypes.map((type) => (
-                <Chip
-                  key={type.id}
-                  selected={type.id === editServiceTypeId}
-                  tone="accent"
-                  onClick={() => setEditServiceTypeId(type.id)}
-                >
-                  {type.name}
-                </Chip>
-              ))}
-            </div>
-          </section>
+          {session.paymentStatus === 'package' ? (
+            <p className={styles.notes}>
+              Esta sesión está cubierta por un bono — el tipo y el precio no se pueden editar aquí.
+            </p>
+          ) : (
+            <section className={styles.field}>
+              <label className={styles.label}>Tipo de sesión</label>
+              <div className={styles.chipRow}>
+                {serviceTypes.map((type) => (
+                  <Chip
+                    key={type.id}
+                    selected={type.id === editServiceTypeId}
+                    tone="accent"
+                    onClick={() => setEditServiceTypeId(type.id)}
+                  >
+                    {type.name}
+                  </Chip>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section className={styles.field}>
             <label className={styles.label}>Fecha y hora</label>
@@ -171,16 +208,22 @@ export function SessionDetailSheet() {
             </div>
           </section>
 
-          <section className={styles.field}>
-            <label className={styles.label}>Precio</label>
-            <input
-              type="number"
-              inputMode="decimal"
-              className={styles.editInput}
-              value={editPriceEuros}
-              onChange={(e) => setEditPriceEuros(e.target.value)}
-            />
-          </section>
+          {session.paymentStatus !== 'package' && (
+            <section className={styles.field}>
+              <label className={styles.label}>Precio</label>
+              <input
+                type="number"
+                min={0}
+                inputMode="decimal"
+                className={styles.editInput}
+                value={editPriceEuros}
+                onChange={(e) => setEditPriceEuros(e.target.value)}
+                onBlur={() =>
+                  setEditPriceEuros(String(Math.max(0, Number.parseFloat(editPriceEuros) || 0)))
+                }
+              />
+            </section>
+          )}
 
           <section className={styles.field}>
             <label className={styles.label}>Notas</label>
@@ -232,7 +275,7 @@ export function SessionDetailSheet() {
                 key={option.value}
                 selected={session.attendance === option.value}
                 tone="accent"
-                onClick={() => updateSessionAttendance(session.id, option.value)}
+                onClick={() => handleAttendanceChange(option.value)}
               >
                 {option.label}
               </Chip>
@@ -253,11 +296,7 @@ export function SessionDetailSheet() {
               Marcar como cobrada
             </Button>
           )}
-          <Button
-            variant="secondary"
-            fullWidth
-            onClick={() => downloadSessionReminder(session, client, serviceType)}
-          >
+          <Button variant="secondary" fullWidth onClick={handleAddReminder}>
             📅 Añadir recordatorio al calendario
           </Button>
           <Button variant="secondary" fullWidth onClick={enterEditMode}>
@@ -278,8 +317,4 @@ export function SessionDetailSheet() {
       )}
     </Sheet>
   )
-}
-
-function capitalize(text: string): string {
-  return text.charAt(0).toUpperCase() + text.slice(1)
 }

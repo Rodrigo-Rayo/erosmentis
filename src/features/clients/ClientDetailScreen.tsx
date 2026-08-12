@@ -8,15 +8,16 @@ import {
   deletePackage,
   restorePackage,
 } from '@/db/repositories/packages.repo'
-import { listPaymentsForClient } from '@/db/repositories/payments.repo'
 import { db } from '@/db/database'
 import { SessionDayList } from '@/components/list/SessionDayList'
 import { EmptyState } from '@/components/ui/EmptyState'
-import { formatCents, sumCents } from '@/domain/money'
-import { isSessionBillable } from '@/domain/pricing'
+import { formatCents } from '@/domain/money'
+import { calculateMonthTotals } from '@/domain/totals'
+import { getErrorMessage } from '@/domain/errors'
 import { useState } from 'react'
 import { MarkPaidSheet } from '@/features/sessions/MarkPaidSheet'
 import { useToast } from '@/components/ui/Toast'
+import { useNotFoundAfterDelay } from '@/hooks/useNotFoundAfterDelay'
 import type { PaymentMethod, Session } from '@/domain/types'
 import styles from './ClientDetailScreen.module.css'
 
@@ -27,8 +28,8 @@ export function ClientDetailScreen() {
   const [payingSession, setPayingSession] = useState<Session | null>(null)
 
   const client = useLiveQuery(() => (id ? getClient(id) : undefined), [id])
+  const clientNotFound = useNotFoundAfterDelay(client)
   const sessions = useLiveQuery(() => (id ? listSessionsForClient(id) : []), [id], [])
-  const payments = useLiveQuery(() => (id ? listPaymentsForClient(id) : []), [id], [])
   const activePackages = useLiveQuery(() => (id ? getActivePackagesForClient(id) : []), [id], [])
   const serviceTypes = useLiveQuery(() => db.serviceTypes.toArray(), [], [])
 
@@ -39,24 +40,50 @@ export function ClientDetailScreen() {
   )
 
   if (!client) {
-    return <p>Cargando…</p>
+    return (
+      <p>
+        {clientNotFound ? (
+          <>
+            No se ha encontrado este paciente. <Link to="/clientes">Volver a Pacientes</Link>
+          </>
+        ) : (
+          'Cargando…'
+        )}
+      </p>
+    )
   }
 
-  const billed = sumCents(sessions.filter(isSessionBillable).map((s) => s.priceCents))
-  const collected = sumCents(payments.map((p) => p.amountCents))
+  // Same session-derived calculation as the Month screen: billed, collected and pending
+  // all come from each session's own paymentStatus, so they always reconcile — summing a
+  // separately-queried Payment list here previously let "Cobrado" drift from "Facturado"
+  // whenever a paid session was later deleted, or diverge because of package lump-sum
+  // purchase payments that don't map 1:1 to a single session.
+  const totals = calculateMonthTotals(sessions)
   const serviceTypesById = new Map(serviceTypes.map((s) => [s.id, s]))
   const phone = client.people[0]?.phone
 
   async function handleConfirmPayment(method: PaymentMethod) {
     if (!payingSession) return
-    await markSessionPaid({ sessionId: payingSession.id, method })
-    toast.show('Cobro registrado')
-    setPayingSession(null)
+    try {
+      await markSessionPaid({ sessionId: payingSession.id, method })
+      toast.show('Cobro registrado')
+    } catch (error) {
+      toast.show(getErrorMessage(error))
+    } finally {
+      setPayingSession(null)
+    }
   }
 
   async function handleDeletePackage(packageId: string) {
-    await deletePackage(packageId)
-    toast.show('Bono eliminado', { label: 'Deshacer', onClick: () => restorePackage(packageId) })
+    try {
+      await deletePackage(packageId)
+      toast.show('Bono eliminado', {
+        label: 'Deshacer',
+        onClick: () => restorePackage(packageId).catch((error) => toast.show(getErrorMessage(error))),
+      })
+    } catch (error) {
+      toast.show(getErrorMessage(error))
+    }
   }
 
   return (
@@ -124,11 +151,15 @@ export function ClientDetailScreen() {
       <section className={styles.totals}>
         <div className={styles.totalItem}>
           <span className={styles.totalLabel}>Facturado</span>
-          <span className={styles.totalValue}>{formatCents(billed)}</span>
+          <span className={styles.totalValue}>{formatCents(totals.billedCents)}</span>
         </div>
         <div className={styles.totalItem}>
           <span className={styles.totalLabel}>Cobrado</span>
-          <span className={styles.totalValue}>{formatCents(collected)}</span>
+          <span className={styles.totalValue}>{formatCents(totals.collectedCents)}</span>
+        </div>
+        <div className={styles.totalItem}>
+          <span className={styles.totalLabel}>Pendiente</span>
+          <span className={styles.totalValuePending}>{formatCents(totals.pendingCents)}</span>
         </div>
       </section>
 

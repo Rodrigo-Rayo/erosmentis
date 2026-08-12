@@ -1,10 +1,11 @@
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react'
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
+import { getErrorMessage } from '@/domain/errors'
 import styles from './Toast.module.css'
 
 interface ToastAction {
   label: string
-  onClick: () => void
+  onClick: () => void | Promise<void>
 }
 
 interface ToastMessage {
@@ -20,6 +21,7 @@ interface ToastContextValue {
 const ToastContext = createContext<ToastContextValue | null>(null)
 
 const TOAST_DURATION_MS = 4000
+const APP_ERROR_EVENT = 'app:error'
 
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastMessage[]>([])
@@ -31,6 +33,26 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       setToasts((prev) => prev.filter((t) => t.id !== id))
     }, TOAST_DURATION_MS)
   }, [])
+
+  // Surfaces errors from outside React (e.g. an unhandled promise rejection caught in
+  // main.tsx) so a background failure is never completely invisible to the user.
+  useEffect(() => {
+    function handleAppError(event: Event) {
+      const detail = (event as CustomEvent<string>).detail
+      show(typeof detail === 'string' ? detail : 'Ha ocurrido un error inesperado')
+    }
+    window.addEventListener(APP_ERROR_EVENT, handleAppError)
+    return () => window.removeEventListener(APP_ERROR_EVENT, handleAppError)
+  }, [show])
+
+  async function handleActionClick(toast: ToastMessage) {
+    setToasts((prev) => prev.filter((t) => t.id !== toast.id))
+    try {
+      await toast.action?.onClick()
+    } catch (error) {
+      show(getErrorMessage(error))
+    }
+  }
 
   return (
     <ToastContext.Provider value={{ show }}>
@@ -50,10 +72,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 <button
                   type="button"
                   className={styles.action}
-                  onClick={() => {
-                    toast.action?.onClick()
-                    setToasts((prev) => prev.filter((t) => t.id !== toast.id))
-                  }}
+                  onClick={() => handleActionClick(toast)}
                 >
                   {toast.action.label}
                 </button>

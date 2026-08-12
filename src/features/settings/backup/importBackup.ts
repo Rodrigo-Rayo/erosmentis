@@ -127,7 +127,14 @@ async function mergeRecords<T extends Identified>(
   }
 }
 
-export async function restoreMerge(payload: BackupPayload): Promise<void> {
+/**
+ * Merges a backup into the local database (last-write-wins per record by `updatedAt`).
+ * Snapshots the pre-merge state first and returns an undo function, the same safety net
+ * `restoreReplace` already has — merge can still overwrite newer local records with older
+ * ones from the file (e.g. clock skew between devices), so it needs the same way back.
+ */
+export async function restoreMerge(payload: BackupPayload): Promise<() => Promise<void>> {
+  const snapshot = await snapshotCurrentData()
   await db.transaction(
     'rw',
     db.clients,
@@ -163,4 +170,5 @@ export async function restoreMerge(payload: BackupPayload): Promise<void> {
       )
     },
   )
+  return () => replaceAllTables(snapshot)
 }

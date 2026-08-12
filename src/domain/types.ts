@@ -120,5 +120,4 @@ export interface AppSettings {
   backupReminderDays: number
   seedVersion: number
   onboardingCompletedAt: number | null
-  pinLockEnabled: boolean
 }

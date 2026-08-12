@@ -114,6 +114,11 @@ export async function markSessionPaid(input: MarkPaidInput): Promise<void> {
     if (!session) {
       throw new Error(`Session ${input.sessionId} not found`)
     }
+    // Guards against a double-tap or a slow write racing a second confirm creating two
+    // Payment rows for the same session, which would silently inflate collected totals.
+    if (session.paymentStatus !== 'pending') {
+      return
+    }
     const now = Date.now()
     await db.payments.add({
       id: crypto.randomUUID(),
@@ -171,13 +176,38 @@ export async function updateSessionDetails(
   sessionId: string,
   changes: UpdateSessionDetailsInput,
 ): Promise<void> {
+  const session = await db.sessions.get(sessionId)
+  if (!session) {
+    throw new Error(`Session ${sessionId} not found`)
+  }
+  // Price and service type on a bono-covered session come from the package's own
+  // per-session value, not the session itself — editing them out-of-band here would
+  // silently desync the session from the package it's supposed to be consuming.
+  if (session.paymentStatus === 'package') {
+    if (changes.priceCents !== undefined || changes.serviceTypeId !== undefined) {
+      throw new Error('El precio y el tipo de una sesión cubierta por un bono no se pueden editar')
+    }
+  }
   await db.sessions.update(sessionId, changes)
 }
 
+/** Soft-deletes a session and its payment (if any) together, so client/month totals stay consistent. */
 export async function softDeleteSession(sessionId: string): Promise<void> {
-  await db.sessions.update(sessionId, { deletedAt: Date.now() })
+  await db.transaction('rw', db.sessions, db.payments, async () => {
+    await db.sessions.update(sessionId, { deletedAt: Date.now() })
+    const payments = await db.payments.where('sessionId').equals(sessionId).toArray()
+    await Promise.all(
+      payments
+        .filter((p) => p.deletedAt === null)
+        .map((p) => db.payments.update(p.id, { deletedAt: Date.now() })),
+    )
+  })
 }
 
 export async function restoreSession(sessionId: string): Promise<void> {
-  await db.sessions.update(sessionId, { deletedAt: null })
+  await db.transaction('rw', db.sessions, db.payments, async () => {
+    await db.sessions.update(sessionId, { deletedAt: null })
+    const payments = await db.payments.where('sessionId').equals(sessionId).toArray()
+    await Promise.all(payments.map((p) => db.payments.update(p.id, { deletedAt: null })))
+  })
 }

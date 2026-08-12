@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Sheet } from '@/components/ui/Sheet'
 import { Chip } from '@/components/ui/Chip'
 import { formatCents } from '@/domain/money'
@@ -17,6 +18,14 @@ interface MarkPaidSheetProps {
 }
 
 export function MarkPaidSheet({ session, onConfirm, onClose }: MarkPaidSheetProps) {
+  const [isConfirming, setIsConfirming] = useState(false)
+
+  function handleSelect(method: PaymentMethod) {
+    if (isConfirming) return
+    setIsConfirming(true)
+    onConfirm(method)
+  }
+
   return (
     <Sheet title="Marcar como cobrada" onClose={onClose}>
       <div className={styles.wrapper}>
@@ -24,7 +33,12 @@ export function MarkPaidSheet({ session, onConfirm, onClose }: MarkPaidSheetProp
         <p className={styles.hint}>¿Cómo ha pagado?</p>
         <div className={styles.methods}>
           {METHODS.map((method) => (
-            <Chip key={method.value} tone="positive" onClick={() => onConfirm(method.value)}>
+            <Chip
+              key={method.value}
+              tone="positive"
+              onClick={() => handleSelect(method.value)}
+              aria-disabled={isConfirming}
+            >
               {method.label}
             </Chip>
           ))}

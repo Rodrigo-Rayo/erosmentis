@@ -157,4 +157,27 @@ describe('export -> restore round trip', () => {
     const merged = await db.clients.get(client.id)
     expect(merged?.displayName).toBe('Ana García (actualizada)')
   })
+
+  it('undo restores the pre-merge snapshot, same safety net as replace', async () => {
+    const backedUpClient = await seedSomeData()
+    const capture = captureExportedFile()
+    await exportBackup('pw')
+    const file = capture.getFile()
+    const payload = await decryptBackupFile(file, 'pw')
+
+    // Wipe, then create a different local client before merging the old backup back in —
+    // the merge should add the backed-up client alongside it.
+    await db.clients.clear()
+    const localOnlyClient = await createClient({ kind: 'individual', people: [{ name: 'Solo local' }] })
+
+    const undo = await restoreMerge(payload)
+    const afterMerge = await db.clients.toArray()
+    expect(afterMerge.map((c) => c.id).sort()).toEqual(
+      [localOnlyClient.id, backedUpClient.id].sort(),
+    )
+
+    await undo()
+    const afterUndo = await db.clients.toArray()
+    expect(afterUndo.map((c) => c.id)).toEqual([localOnlyClient.id])
+  })
 })

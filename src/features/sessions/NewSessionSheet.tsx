@@ -17,6 +17,7 @@ import {
   softDeleteSession,
 } from '@/db/repositories/sessions.repo'
 import { formatCents } from '@/domain/money'
+import { getErrorMessage } from '@/domain/errors'
 import { nextHalfHourBoundary, shiftDays } from '@/domain/dates'
 import type { Client, Modality } from '@/domain/types'
 import styles from './NewSessionSheet.module.css'
@@ -75,7 +76,11 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
   // Preselect a client when the sheet is opened from a client's own detail screen.
   useEffect(() => {
     if (!presetClientId) return
-    getClient(presetClientId).then((c) => c && setClient(c))
+    getClient(presetClientId)
+      .then((c) => c && setClient(c))
+      .catch((error: unknown) => toast.show(getErrorMessage(error)))
+    // toast.show is a stable useCallback reference; omitting `toast` avoids re-running
+    // this effect every time the toast stack itself changes.
   }, [presetClientId])
 
   // Smart default for service type: the client's own default, else their most recent session type, else the first active type.
@@ -122,6 +127,15 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
     }
   }
 
+  function addReminderSafely(action: () => void) {
+    if (!addReminder) return
+    try {
+      action()
+    } catch {
+      toast.show('Sesión guardada, pero no se pudo generar el recordatorio de calendario')
+    }
+  }
+
   async function handleSave() {
     if (!client || !serviceTypeId) return
     setIsSaving(true)
@@ -139,14 +153,11 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
           repeatWeeks,
           repeatIntervalWeeks,
         )
-        if (addReminder) {
-          downloadSessionsReminder(sessions, client, selectedServiceType ?? undefined)
-        }
+        addReminderSafely(() => downloadSessionsReminder(sessions, client, selectedServiceType ?? undefined))
         toast.show(`${sessions.length} sesiones creadas`, {
           label: 'Deshacer',
-          onClick: () => {
-            sessions.forEach((s) => softDeleteSession(s.id))
-          },
+          onClick: () =>
+            Promise.all(sessions.map((s) => softDeleteSession(s.id))).then(() => undefined),
         })
       } else {
         const session = await createSession({
@@ -157,9 +168,7 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
           notes,
           usePackage,
         })
-        if (addReminder) {
-          downloadSessionReminder(session, client, selectedServiceType ?? undefined)
-        }
+        addReminderSafely(() => downloadSessionReminder(session, client, selectedServiceType ?? undefined))
         toast.show('Sesión guardada', {
           label: 'Deshacer',
           onClick: () => softDeleteSession(session.id),
@@ -167,7 +176,7 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
       }
       handleClose()
     } catch (error) {
-      toast.show(error instanceof Error ? error.message : 'No se pudo guardar la sesión')
+      toast.show(getErrorMessage(error))
     } finally {
       setIsSaving(false)
     }
@@ -247,12 +256,13 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
               <label className={styles.label}>Precio</label>
               <input
                 type="number"
+                min={0}
                 inputMode="decimal"
                 className={styles.priceInput}
                 value={(effectivePriceCents / 100).toString()}
                 onChange={(e) => {
                   const value = Number.parseFloat(e.target.value)
-                  setCustomPriceCents(Number.isNaN(value) ? 0 : Math.round(value * 100))
+                  setCustomPriceCents(Number.isNaN(value) ? 0 : Math.max(0, Math.round(value * 100)))
                 }}
               />
               <span className={styles.priceHint}>{formatCents(effectivePriceCents)}</span>

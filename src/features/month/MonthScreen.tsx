@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from '@/db/database'
-import { monthRange } from '@/domain/dates'
+import { monthRange, capitalize } from '@/domain/dates'
 import { calculateMonthTotals } from '@/domain/totals'
 import { isSessionBillable } from '@/domain/pricing'
 import { listSessionsInRange, markSessionPaid } from '@/db/repositories/sessions.repo'
@@ -12,6 +12,7 @@ import { Chip } from '@/components/ui/Chip'
 import { MarkPaidSheet } from '@/features/sessions/MarkPaidSheet'
 import { useToast } from '@/components/ui/Toast'
 import { formatCents } from '@/domain/money'
+import { getErrorMessage } from '@/domain/errors'
 import type { PaymentMethod, Session } from '@/domain/types'
 import styles from './MonthScreen.module.css'
 
@@ -36,7 +37,11 @@ export function MonthScreen() {
   }, [monthOffset])
 
   const range = monthRange(cursor)
-  const sessions = useLiveQuery(() => listSessionsInRange(range.start, range.end), [range.start], [])
+  const sessions = useLiveQuery(
+    () => listSessionsInRange(range.start, range.end),
+    [range.start, range.end],
+    [],
+  )
   const clients = useLiveQuery(() => db.clients.toArray(), [], [])
   const serviceTypes = useLiveQuery(() => db.serviceTypes.toArray(), [], [])
 
@@ -57,9 +62,14 @@ export function MonthScreen() {
 
   async function handleConfirmPayment(method: PaymentMethod) {
     if (!payingSession) return
-    await markSessionPaid({ sessionId: payingSession.id, method })
-    toast.show('Cobro registrado')
-    setPayingSession(null)
+    try {
+      await markSessionPaid({ sessionId: payingSession.id, method })
+      toast.show('Cobro registrado')
+    } catch (error) {
+      toast.show(getErrorMessage(error))
+    } finally {
+      setPayingSession(null)
+    }
   }
 
   function handleMonthNav(delta: number) {
@@ -148,8 +158,4 @@ export function MonthScreen() {
       )}
     </div>
   )
-}
-
-function capitalize(text: string): string {
-  return text.charAt(0).toUpperCase() + text.slice(1)
 }

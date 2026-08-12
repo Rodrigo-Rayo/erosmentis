@@ -9,6 +9,7 @@ import { getClient } from '@/db/repositories/clients.repo'
 import { listServiceTypes } from '@/db/repositories/serviceTypes.repo'
 import { createPackage } from '@/db/repositories/packages.repo'
 import { formatCents } from '@/domain/money'
+import { getErrorMessage } from '@/domain/errors'
 import type { PaymentMethod } from '@/domain/types'
 import styles from './NewPackageSheet.module.css'
 
@@ -29,7 +30,8 @@ export function NewPackageSheet() {
   const serviceTypes = useLiveQuery(() => listServiceTypes(), [], [])
 
   const [serviceTypeId, setServiceTypeId] = useState<string | null>(null)
-  const [totalSessions, setTotalSessions] = useState(4)
+  const [totalSessionsInput, setTotalSessionsInput] = useState('4')
+  const totalSessions = Math.min(20, Math.max(2, Number.parseInt(totalSessionsInput, 10) || 2))
   const [priceEuros, setPriceEuros] = useState<number | null>(null)
   const [method, setMethod] = useState<PaymentMethod>('transfer')
   const [isSaving, setIsSaving] = useState(false)
@@ -65,11 +67,13 @@ export function NewPackageSheet() {
         serviceTypeId: selectedServiceType?.id ?? null,
         label: `Bono ${totalSessions} sesiones`,
         totalSessions,
-        pricePaidCents: Math.round(effectivePriceEuros * 100),
+        pricePaidCents: Math.max(0, Math.round(effectivePriceEuros * 100)),
         paymentMethod: method,
       })
       toast.show('Bono creado')
       handleClose()
+    } catch (error) {
+      toast.show(getErrorMessage(error))
     } finally {
       setIsSaving(false)
     }
@@ -110,11 +114,12 @@ export function NewPackageSheet() {
             min={2}
             max={20}
             className={styles.numberInput}
-            value={totalSessions}
+            value={totalSessionsInput}
             onChange={(e) => {
-              setTotalSessions(Number(e.target.value) || 1)
+              setTotalSessionsInput(e.target.value)
               setPriceEuros(null)
             }}
+            onBlur={() => setTotalSessionsInput(String(totalSessions))}
           />
         </section>
 
@@ -122,10 +127,11 @@ export function NewPackageSheet() {
           <label className={styles.label}>Precio total del bono</label>
           <input
             type="number"
+            min={0}
             inputMode="decimal"
             className={styles.numberInput}
             value={effectivePriceEuros}
-            onChange={(e) => setPriceEuros(Number.parseFloat(e.target.value) || 0)}
+            onChange={(e) => setPriceEuros(Math.max(0, Number.parseFloat(e.target.value) || 0))}
           />
           <span className={styles.hint}>
             Precio de lista: {formatCents(listPriceCents)}

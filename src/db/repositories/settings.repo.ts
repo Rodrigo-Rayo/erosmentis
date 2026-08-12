@@ -13,7 +13,6 @@ const DEFAULT_SETTINGS: AppSettings = {
   backupReminderDays: 7,
   seedVersion: 0,
   onboardingCompletedAt: null,
-  pinLockEnabled: false,
 }
 
 /** Read-only: safe to call from useLiveQuery. Never writes to the database. */
