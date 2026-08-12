@@ -1,0 +1,46 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  border: 1px solid var(--color-border);
+  background: var(--color-paper-raised);
+  color: var(--color-ink-muted);
+  border-radius: var(--radius-pill);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-out-expo);
+  min-height: 40px;
+}
+
+.chip.selected.neutral {
+  background: var(--color-ink);
+  color: var(--color-paper);
+  border-color: var(--color-ink);
+}
+
+.chip.selected.accent {
+  background: var(--color-accent);
+  color: var(--color-paper-raised);
+  border-color: var(--color-accent);
+}
+
+.chip.selected.positive {
+  background: var(--color-positive);
+  color: var(--color-paper-raised);
+  border-color: var(--color-positive);
+}
+
+.chip.selected.pending {
+  background: var(--color-pending);
+  color: var(--color-paper-raised);
+  border-color: var(--color-pending);
+}
+
+.chip.selected.negative {
+  background: var(--color-negative);
+  color: var(--color-paper-raised);
+  border-color: var(--color-negative);
+}

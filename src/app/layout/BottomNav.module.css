@@ -1,0 +1,32 @@
+.nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  background: var(--color-paper-raised);
+  border-top: 1px solid var(--color-border);
+  padding-bottom: var(--safe-bottom);
+  z-index: 30;
+}
+
+.tab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--space-2) 0;
+  text-decoration: none;
+  color: var(--color-ink-muted);
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+
+.icon {
+  font-size: 1.25rem;
+}
+
+.active {
+  color: var(--color-accent);
+}

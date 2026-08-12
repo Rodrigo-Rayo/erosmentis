@@ -1,0 +1,124 @@
+:root {
+  /* Warm editorial palette — paper, not clinical white */
+  --color-paper: oklch(97% 0.012 80);
+  --color-paper-raised: oklch(99% 0.008 80);
+  --color-ink: oklch(24% 0.02 50);
+  --color-ink-muted: oklch(45% 0.02 50);
+  --color-border: oklch(88% 0.015 70);
+
+  --color-accent: oklch(58% 0.13 40); /* terracotta */
+  --color-accent-soft: oklch(90% 0.05 40);
+  --color-positive: oklch(56% 0.09 145); /* sage — paid */
+  --color-positive-soft: oklch(92% 0.04 145);
+  --color-pending: oklch(70% 0.13 75); /* muted amber */
+  --color-pending-soft: oklch(93% 0.06 75);
+  --color-negative: oklch(58% 0.1 15); /* dusty rose — cancelled */
+  --color-negative-soft: oklch(92% 0.04 15);
+
+  --color-couple-a: oklch(65% 0.12 30);
+  --color-couple-b: oklch(65% 0.1 300);
+
+  --font-display: 'Fraunces', ui-serif, Georgia, serif;
+  --font-body:
+    'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  --text-xs: clamp(0.75rem, 0.72rem + 0.15vw, 0.8rem);
+  --text-sm: clamp(0.875rem, 0.84rem + 0.15vw, 0.925rem);
+  --text-base: clamp(1rem, 0.96rem + 0.2vw, 1.0625rem);
+  --text-lg: clamp(1.125rem, 1.05rem + 0.35vw, 1.25rem);
+  --text-xl: clamp(1.375rem, 1.25rem + 0.6vw, 1.625rem);
+  --text-2xl: clamp(1.75rem, 1.5rem + 1.2vw, 2.25rem);
+  --text-total: clamp(2.25rem, 1.9rem + 1.6vw, 3rem);
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.875rem;
+  --radius-lg: 1.25rem;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 1px 2px oklch(30% 0.02 50 / 0.06);
+  --shadow-md: 0 8px 24px oklch(30% 0.02 50 / 0.1);
+  --shadow-lg: 0 16px 40px oklch(30% 0.02 50 / 0.16);
+
+  --duration-fast: 150ms;
+  --duration-normal: 280ms;
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
+
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-paper: oklch(20% 0.015 50);
+    --color-paper-raised: oklch(25% 0.018 50);
+    --color-ink: oklch(94% 0.01 80);
+    --color-ink-muted: oklch(72% 0.015 70);
+    --color-border: oklch(32% 0.02 50);
+
+    --color-accent: oklch(72% 0.13 40);
+    --color-accent-soft: oklch(32% 0.06 40);
+    --color-positive: oklch(72% 0.1 145);
+    --color-positive-soft: oklch(30% 0.05 145);
+    --color-pending: oklch(78% 0.13 75);
+    --color-pending-soft: oklch(32% 0.06 75);
+    --color-negative: oklch(72% 0.1 15);
+    --color-negative-soft: oklch(32% 0.05 15);
+
+    color-scheme: dark;
+  }
+}
+
+:root[data-theme='dark'] {
+  --color-paper: oklch(20% 0.015 50);
+  --color-paper-raised: oklch(25% 0.018 50);
+  --color-ink: oklch(94% 0.01 80);
+  --color-ink-muted: oklch(72% 0.015 70);
+  --color-border: oklch(32% 0.02 50);
+
+  --color-accent: oklch(72% 0.13 40);
+  --color-accent-soft: oklch(32% 0.06 40);
+  --color-positive: oklch(72% 0.1 145);
+  --color-positive-soft: oklch(30% 0.05 145);
+  --color-pending: oklch(78% 0.13 75);
+  --color-pending-soft: oklch(32% 0.06 75);
+  --color-negative: oklch(72% 0.1 15);
+  --color-negative-soft: oklch(32% 0.05 15);
+
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --color-paper: oklch(97% 0.012 80);
+  --color-paper-raised: oklch(99% 0.008 80);
+  --color-ink: oklch(24% 0.02 50);
+  --color-ink-muted: oklch(45% 0.02 50);
+  --color-border: oklch(88% 0.015 70);
+
+  --color-accent: oklch(58% 0.13 40);
+  --color-accent-soft: oklch(90% 0.05 40);
+  --color-positive: oklch(56% 0.09 145);
+  --color-positive-soft: oklch(92% 0.04 145);
+  --color-pending: oklch(70% 0.13 75);
+  --color-pending-soft: oklch(93% 0.06 75);
+  --color-negative: oklch(58% 0.1 15);
+  --color-negative-soft: oklch(92% 0.04 15);
+
+  color-scheme: light;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+  }
+}

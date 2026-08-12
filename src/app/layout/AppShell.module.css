@@ -1,0 +1,11 @@
+.shell {
+  min-height: 100%;
+  padding-top: var(--safe-top);
+  padding-bottom: calc(64px + var(--safe-bottom));
+}
+
+.main {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-5) var(--space-4) var(--space-6);
+}
