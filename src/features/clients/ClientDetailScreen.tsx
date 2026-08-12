@@ -73,7 +73,7 @@ export function ClientDetailScreen() {
         )}
       </header>
 
-      {activePackages[0] && packageBalance && (
+      {activePackages[0] && packageBalance ? (
         <section className={styles.packageCard}>
           <div className={styles.packageTitle}>{activePackages[0].label}</div>
           <div className={styles.packageBalance}>
@@ -81,6 +81,14 @@ export function ClientDetailScreen() {
             {packageBalance.reserved > 0 && `, ${packageBalance.reserved} reservada${packageBalance.reserved > 1 ? 's' : ''}`}
           </div>
         </section>
+      ) : (
+        <Link
+          to={`/clientes/${client.id}/bono/nuevo`}
+          state={{ backgroundLocation: location }}
+          className={styles.newPackageButton}
+        >
+          + Añadir bono
+        </Link>
       )}
 
       <section className={styles.totals}>

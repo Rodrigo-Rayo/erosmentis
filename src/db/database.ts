@@ -29,29 +29,13 @@ export class PsicoAgendaDB extends Dexie {
       settings: 'id',
     })
 
-    this.clients.hook('creating', (_pk, obj) => {
-      obj.updatedAt = Date.now()
-    })
+    // Only 'updating' is hooked, not 'creating': every create* repository function already
+    // stamps updatedAt explicitly, and bulkAdd/put during backup restore must preserve the
+    // original historical updatedAt rather than having it overwritten to "now".
     this.clients.hook('updating', (mods) => ({ ...mods, updatedAt: Date.now() }))
-
-    this.serviceTypes.hook('creating', (_pk, obj) => {
-      obj.updatedAt = Date.now()
-    })
     this.serviceTypes.hook('updating', (mods) => ({ ...mods, updatedAt: Date.now() }))
-
-    this.sessions.hook('creating', (_pk, obj) => {
-      obj.updatedAt = Date.now()
-    })
     this.sessions.hook('updating', (mods) => ({ ...mods, updatedAt: Date.now() }))
-
-    this.packages.hook('creating', (_pk, obj) => {
-      obj.updatedAt = Date.now()
-    })
     this.packages.hook('updating', (mods) => ({ ...mods, updatedAt: Date.now() }))
-
-    this.payments.hook('creating', (_pk, obj) => {
-      obj.updatedAt = Date.now()
-    })
     this.payments.hook('updating', (mods) => ({ ...mods, updatedAt: Date.now() }))
   }
 }

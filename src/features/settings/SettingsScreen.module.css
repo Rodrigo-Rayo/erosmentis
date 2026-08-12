@@ -28,3 +28,18 @@
   line-height: 1.6;
   margin: 0;
 }
+
+.nudge {
+  background: var(--color-pending-soft);
+  color: var(--color-ink);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+.backupLink {
+  color: var(--color-accent);
+  font-weight: 600;
+  text-decoration: none;
+}
