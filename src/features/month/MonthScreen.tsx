@@ -5,7 +5,6 @@ import { monthRange } from '@/domain/dates'
 import { calculateMonthTotals } from '@/domain/totals'
 import { isSessionBillable } from '@/domain/pricing'
 import { listSessionsInRange, markSessionPaid } from '@/db/repositories/sessions.repo'
-import { listPaymentsInRange } from '@/db/repositories/payments.repo'
 import { SessionDayList } from '@/components/list/SessionDayList'
 import { MonthCalendarGrid } from './MonthCalendarGrid'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -38,11 +37,10 @@ export function MonthScreen() {
 
   const range = monthRange(cursor)
   const sessions = useLiveQuery(() => listSessionsInRange(range.start, range.end), [range.start], [])
-  const payments = useLiveQuery(() => listPaymentsInRange(range.start, range.end), [range.start], [])
   const clients = useLiveQuery(() => db.clients.toArray(), [], [])
   const serviceTypes = useLiveQuery(() => db.serviceTypes.toArray(), [], [])
 
-  const totals = calculateMonthTotals(sessions, payments)
+  const totals = calculateMonthTotals(sessions)
   const clientsById = new Map(clients.map((c) => [c.id, c]))
   const serviceTypesById = new Map(serviceTypes.map((s) => [s.id, s]))
 

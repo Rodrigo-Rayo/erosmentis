@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
 import { calculateMonthTotals } from './totals'
-import { makePayment, makeSession } from './testFixtures'
+import { makeSession } from './testFixtures'
 
 describe('calculateMonthTotals', () => {
-  it('reconciles a fixture month with a free consult, a bono session, a no-show and a pending payment', () => {
+  it('reconciles a fixture month with a free consult, a bono session, a no-show and a pending session', () => {
     const sessions = [
       // Free initial consultation — must contribute EUR 0 to every revenue total.
       makeSession({
@@ -26,7 +26,8 @@ describe('calculateMonthTotals', () => {
         priceCents: 6000,
         attendance: 'attended',
       }),
-      // Bono-covered session — billed at the discounted per-session value, not list price.
+      // Bono-covered session — billed (and counted as collected) at the discounted
+      // per-session value, not list price.
       makeSession({
         id: 's-package',
         paymentStatus: 'package',
@@ -34,7 +35,7 @@ describe('calculateMonthTotals', () => {
         packageId: 'pkg-1',
         attendance: 'attended',
       }),
-      // No-show — billable by default (slot was reserved).
+      // No-show — billable by default (slot was reserved), still unpaid.
       makeSession({
         id: 's-noshow',
         paymentStatus: 'pending',
@@ -58,26 +59,20 @@ describe('calculateMonthTotals', () => {
       }),
     ]
 
-    const payments = [
-      makePayment({ id: 'p-1', sessionId: 's-paid', amountCents: 6000 }),
-      // Package purchase payment, collected up front.
-      makePayment({ id: 'p-2', kind: 'package', packageId: 'pkg-1', amountCents: 22000 }),
-    ]
-
-    const totals = calculateMonthTotals(sessions, payments)
+    const totals = calculateMonthTotals(sessions)
 
     // Billed = paid (6000) + pending (6000) + package (5500) + no-show (6000) = 23500
     expect(totals.billedCents).toBe(23500)
-    // Collected = session payment (6000) + package purchase payment (22000) = 28000
-    expect(totals.collectedCents).toBe(28000)
-    // Pending = the one still-owed regular session = 6000 (no-show is pending status too)
+    // Collected = paid (6000) + package (5500) = 11500
+    expect(totals.collectedCents).toBe(11500)
+    // Pending = pending (6000) + no-show (6000) = 12000
     expect(totals.pendingCents).toBe(12000)
     expect(totals.billableSessionCount).toBe(4)
     expect(totals.pendingSessionCount).toBe(2)
   })
 
   it('returns all zeros for an empty month', () => {
-    const totals = calculateMonthTotals([], [])
+    const totals = calculateMonthTotals([])
     expect(totals).toEqual({
       billedCents: 0,
       collectedCents: 0,
@@ -87,12 +82,21 @@ describe('calculateMonthTotals', () => {
     })
   })
 
-  it('excludes refunded/negative payments correctly by summing them as negative', () => {
-    const payments = [
-      makePayment({ id: 'p-1', amountCents: 6000 }),
-      makePayment({ id: 'p-2', amountCents: -6000 }),
+  it('always reconciles: billed equals collected plus pending, regardless of when each session was paid', () => {
+    // A session scheduled for next month but already marked paid today is the exact
+    // scenario that used to make "Cobrado" show 0 while "Facturado" showed the price:
+    // collected used to be computed from a separate Payment query filtered by paidAt,
+    // which could fall in a different month than the session's own startAt.
+    const nextMonthStart = Date.UTC(2026, 8, 5, 10, 0)
+    const sessions = [
+      makeSession({ id: 's-1', paymentStatus: 'paid', priceCents: 6000, startAt: nextMonthStart }),
+      makeSession({ id: 's-2', paymentStatus: 'pending', priceCents: 6000, startAt: nextMonthStart }),
     ]
-    const totals = calculateMonthTotals([], payments)
-    expect(totals.collectedCents).toBe(0)
+
+    const totals = calculateMonthTotals(sessions)
+
+    expect(totals.billedCents).toBe(totals.collectedCents + totals.pendingCents)
+    expect(totals.collectedCents).toBe(6000)
+    expect(totals.pendingCents).toBe(6000)
   })
 })
