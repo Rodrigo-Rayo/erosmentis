@@ -32,12 +32,13 @@ export function HomeIcon(props: IconProps) {
   )
 }
 
-/** Coin/currency mark for the quick "mark as paid" action. */
+/** Euro mark for the quick "mark as paid" action. */
 export function CoinIcon(props: IconProps) {
   return (
     <svg {...BASE_PROPS} {...props}>
       <circle cx="12" cy="12" r="8.2" />
-      <path d="M12 7.8v8.4M9.6 9.4c0-1 1-1.7 2.4-1.7s2.4.6 2.4 1.5c0 2-4.8 1-4.8 3 0 .9 1 1.6 2.4 1.6s2.4-.7 2.4-1.7" />
+      <path d="M15 8.2c-3.5-1.7-7 .6-7 3.8s3.5 5.5 7 3.8" />
+      <path d="M6.6 10.6h6.1M6.6 13.2h5.3" />
     </svg>
   )
 }

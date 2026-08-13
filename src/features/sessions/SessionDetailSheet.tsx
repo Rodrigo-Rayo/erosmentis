@@ -23,6 +23,8 @@ import { downloadSessionReminder } from './reminderExport'
 import { formatCents } from '@/domain/money'
 import { getErrorMessage } from '@/domain/errors'
 import { capitalize } from '@/domain/dates'
+import { MonitorIcon, HomeIcon } from '@/components/icons/SessionIcons'
+import { CalendarIcon } from '@/components/icons/NavIcons'
 import { useNotFoundAfterDelay } from '@/hooks/useNotFoundAfterDelay'
 import type { Attendance, Modality, PaymentMethod } from '@/domain/types'
 import { MarkPaidSheet } from './MarkPaidSheet'
@@ -238,14 +240,16 @@ export function SessionDetailSheet() {
             <label className={styles.label}>Modalidad</label>
             <div className={styles.chipRow}>
               <Chip selected={editModality === 'online'} tone="accent" onClick={() => setEditModality('online')}>
-                💻 Online
+                <MonitorIcon className={styles.chipIcon} aria-hidden="true" />
+                <span>Online</span>
               </Chip>
               <Chip
                 selected={editModality === 'in_person'}
                 tone="accent"
                 onClick={() => setEditModality('in_person')}
               >
-                🏠 Presencial
+                <HomeIcon className={styles.chipIcon} aria-hidden="true" />
+                <span>Presencial</span>
               </Chip>
             </div>
           </section>
@@ -351,7 +355,8 @@ export function SessionDetailSheet() {
             </Button>
           )}
           <Button variant="secondary" fullWidth onClick={handleAddReminder}>
-            📅 Añadir recordatorio al calendario
+            <CalendarIcon className={styles.chipIcon} aria-hidden="true" />
+            <span>Añadir recordatorio al calendario</span>
           </Button>
           <Button variant="secondary" fullWidth onClick={enterEditMode}>
             Editar sesión

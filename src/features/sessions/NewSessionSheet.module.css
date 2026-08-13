@@ -23,6 +23,12 @@
   flex-wrap: wrap;
 }
 
+.chipIcon {
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
 .dateButton {
   flex: 1;
   border: none;

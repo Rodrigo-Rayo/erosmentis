@@ -11,6 +11,7 @@ import { MarkPaidSheet } from '@/features/sessions/MarkPaidSheet'
 import { useToast } from '@/components/ui/Toast'
 import { formatCents } from '@/domain/money'
 import { getErrorMessage } from '@/domain/errors'
+import { useSwipeNavigation } from '@/hooks/useSwipeNavigation'
 import type { PaymentMethod, Session } from '@/domain/types'
 import styles from './MonthScreen.module.css'
 
@@ -61,8 +62,13 @@ export function MonthScreen() {
     setMonthOffset((v) => v + delta)
   }
 
+  const monthSwipe = useSwipeNavigation(
+    () => handleMonthNav(1),
+    () => handleMonthNav(-1),
+  )
+
   return (
-    <div className={styles.wrapper}>
+    <div className={styles.wrapper} style={{ touchAction: 'pan-y' }} {...monthSwipe}>
       <header className={styles.header}>
         <button type="button" className={styles.navButton} onClick={() => handleMonthNav(-1)}>
           ‹

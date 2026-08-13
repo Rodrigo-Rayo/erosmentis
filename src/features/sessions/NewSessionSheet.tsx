@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/Button'
 import { Chip } from '@/components/ui/Chip'
 import { useToast } from '@/components/ui/Toast'
 import { ClientAutocomplete } from '@/features/clients/ClientAutocomplete'
+import { MonitorIcon, HomeIcon } from '@/components/icons/SessionIcons'
+import { CalendarIcon } from '@/components/icons/NavIcons'
 import { listServiceTypes } from '@/db/repositories/serviceTypes.repo'
 import { findConsumablePackage, getPackageBalance } from '@/db/repositories/packages.repo'
 import { getClient } from '@/db/repositories/clients.repo'
@@ -341,14 +343,16 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
               <label className={styles.label}>Modalidad</label>
               <div className={styles.chipRow}>
                 <Chip selected={modality === 'online'} tone="accent" onClick={() => setModality('online')}>
-                  💻 Online
+                  <MonitorIcon className={styles.chipIcon} aria-hidden="true" />
+                  <span>Online</span>
                 </Chip>
                 <Chip
                   selected={modality === 'in_person'}
                   tone="accent"
                   onClick={() => setModality('in_person')}
                 >
-                  🏠 Presencial
+                  <HomeIcon className={styles.chipIcon} aria-hidden="true" />
+                  <span>Presencial</span>
                 </Chip>
               </div>
             </section>
@@ -409,7 +413,8 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
 
         <label className={styles.packageToggle}>
           <input type="checkbox" checked={addReminder} onChange={(e) => setAddReminder(e.target.checked)} />
-          📅 Recordarme por calendario (24h y 1h antes)
+          <CalendarIcon className={styles.chipIcon} aria-hidden="true" />
+          <span>Recordarme por calendario (24h y 1h antes)</span>
         </label>
 
         <Button fullWidth onClick={handleSave} disabled={!canSave}>

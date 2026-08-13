@@ -12,6 +12,7 @@ import { MarkPaidSheet } from '@/features/sessions/MarkPaidSheet'
 import { Chip } from '@/components/ui/Chip'
 import { useToast } from '@/components/ui/Toast'
 import { getErrorMessage } from '@/domain/errors'
+import { useSwipeNavigation } from '@/hooks/useSwipeNavigation'
 import type { PaymentMethod, Session } from '@/domain/types'
 import styles from './DayScreen.module.css'
 
@@ -95,6 +96,15 @@ export function DayScreen() {
   )
   const weekRangeLabel = formatWeekRangeLabel(weekMonday)
 
+  const monthSwipe = useSwipeNavigation(
+    () => setMonthOffset((v) => v + 1),
+    () => setMonthOffset((v) => v - 1),
+  )
+  const weekSwipe = useSwipeNavigation(
+    () => setWeekOffset((v) => v + 1),
+    () => setWeekOffset((v) => v - 1),
+  )
+
   async function handleConfirmPayment(method: PaymentMethod) {
     if (!payingSession) return
     try {
@@ -133,7 +143,7 @@ export function DayScreen() {
 
       {subTab === 'dia' ? (
         <>
-          <section className={styles.calendarSection}>
+          <section className={styles.calendarSection} style={{ touchAction: 'pan-y' }} {...monthSwipe}>
             <div className={styles.calendarNav}>
               <button
                 type="button"
@@ -180,7 +190,7 @@ export function DayScreen() {
           </section>
         </>
       ) : (
-        <section className={styles.weekSection}>
+        <section className={styles.weekSection} style={{ touchAction: 'pan-y' }} {...weekSwipe}>
           <div className={styles.weekNav}>
             <button type="button" className={styles.navButton} onClick={() => setWeekOffset((v) => v - 1)}>
               ‹

@@ -30,7 +30,9 @@ async function getRecentClientIds(): Promise<string[]> {
 export function ClientAutocomplete({ value, onSelect, autoFocus = false }: ClientAutocompleteProps) {
   const toast = useToast()
   const [query, setQuery] = useState('')
-  const [isOpen, setIsOpen] = useState(false)
+  // Open by default so recent patients are visible immediately — this only controls the
+  // results list, not keyboard focus, which still waits for an explicit tap on the input.
+  const [isOpen, setIsOpen] = useState(true)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const recentIds = useLiveQuery(getRecentClientIds, [], [])
