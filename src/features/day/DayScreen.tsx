@@ -180,7 +180,9 @@ export function DayScreen() {
             {freeSlotsByDay.map(({ date, slots }) => (
               <div key={date.toISOString()} className={styles.weekDayRow}>
                 <span className={styles.weekDayLabel}>
-                  {capitalize(new Intl.DateTimeFormat('es-ES', { weekday: 'long' }).format(date))}
+                  {capitalize(
+                    new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric' }).format(date),
+                  )}
                 </span>
                 <div className={styles.weekSlotChips}>
                   {slots.map((slot) => (
