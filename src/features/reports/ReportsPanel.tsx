@@ -6,7 +6,6 @@ import { listAllExpenses, softDeleteExpense } from '@/db/repositories/expenses.r
 import { calculateMonthTotals } from '@/domain/totals'
 import {
   calculateAverageSessionCents,
-  calculateExpenseCategoryBreakdown,
   calculateExpensesCents,
   calculateServiceTypeBreakdown,
   calculateYearBreakdown,
@@ -81,7 +80,6 @@ export function ReportsPanel() {
   const serviceBreakdown = calculateServiceTypeBreakdown(periodSessions, serviceTypesById)
   const yearBreakdown = period === 'historic' ? calculateYearBreakdown(periodSessions) : []
   const expensesCents = calculateExpensesCents(periodExpenses)
-  const expenseBreakdown = calculateExpenseCategoryBreakdown(periodExpenses)
   const profitCents = totals.collectedCents - expensesCents
 
   async function handleDeleteExpense(id: string) {
@@ -205,17 +203,6 @@ export function ReportsPanel() {
         </div>
 
         <p className={styles.expensesTotal}>{formatCents(expensesCents)}</p>
-
-        {expenseBreakdown.length > 0 && (
-          <div className={styles.breakdownList}>
-            {expenseBreakdown.map((item) => (
-              <div key={item.category} className={styles.yearRow}>
-                <span className={styles.yearLabel}>{item.label}</span>
-                <span className={styles.yearAmount}>{formatCents(item.amountCents)}</span>
-              </div>
-            ))}
-          </div>
-        )}
 
         {periodExpenses.length > 0 && (
           <div className={styles.breakdownList}>
