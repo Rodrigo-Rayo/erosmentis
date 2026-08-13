@@ -54,3 +54,32 @@ export function CoinIcon(props: IconProps) {
     </svg>
   )
 }
+
+/** Call action — matches the thin line-icon style used elsewhere. */
+export function PhoneIcon(props: IconProps) {
+  return (
+    <svg {...BASE_PROPS} {...props}>
+      <path d="M5.5 4.5h3l1.4 4-2 1.7a12 12 0 0 0 5.9 5.9l1.7-2 4 1.4v3a1.6 1.6 0 0 1-1.7 1.6C10.8 19.8 4.2 13.2 3.9 6.2A1.6 1.6 0 0 1 5.5 4.5Z" />
+    </svg>
+  )
+}
+
+/** WhatsApp/chat action — matches the thin line-icon style used elsewhere. */
+export function ChatIcon(props: IconProps) {
+  return (
+    <svg {...BASE_PROPS} {...props}>
+      <path d="M12 4a8 8 0 0 0-6.9 12l-1.1 4 4.1-1.1A8 8 0 1 0 12 4Z" />
+      <path d="M8.7 9.8c.2 2.5 2 4.3 4.5 4.5" />
+    </svg>
+  )
+}
+
+/** Edit action — matches the thin line-icon style used elsewhere. */
+export function EditIcon(props: IconProps) {
+  return (
+    <svg {...BASE_PROPS} {...props}>
+      <path d="M15.2 4.6 19.4 8.8 8.6 19.6H4.4v-4.2Z" />
+      <path d="M13.4 6.4l3.9 3.9" />
+    </svg>
+  )
+}

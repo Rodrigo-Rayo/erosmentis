@@ -18,7 +18,7 @@ import { useState } from 'react'
 import { MarkPaidSheet } from '@/features/sessions/MarkPaidSheet'
 import { useToast } from '@/components/ui/Toast'
 import { useNotFoundAfterDelay } from '@/hooks/useNotFoundAfterDelay'
-import { CoupleIcon } from '@/components/icons/SessionIcons'
+import { ChatIcon, CoupleIcon, EditIcon, PhoneIcon } from '@/components/icons/SessionIcons'
 import type { PaymentMethod, Session } from '@/domain/types'
 import styles from './ClientDetailScreen.module.css'
 
@@ -102,7 +102,8 @@ export function ClientDetailScreen() {
           {phone && (
             <>
               <a href={`tel:${phone}`} className={styles.contactButton}>
-                📞 Llamar
+                <PhoneIcon className={styles.contactIcon} aria-hidden="true" />
+                Llamar
               </a>
               <a
                 href={`https://wa.me/${phone.replace(/\D/g, '')}`}
@@ -110,7 +111,8 @@ export function ClientDetailScreen() {
                 rel="noreferrer"
                 className={styles.contactButton}
               >
-                💬 WhatsApp
+                <ChatIcon className={styles.contactIcon} aria-hidden="true" />
+                WhatsApp
               </a>
             </>
           )}
@@ -119,7 +121,8 @@ export function ClientDetailScreen() {
             state={{ backgroundLocation: location }}
             className={styles.contactButton}
           >
-            ✎ Editar
+            <EditIcon className={styles.contactIcon} aria-hidden="true" />
+            Editar
           </Link>
         </div>
       </header>
