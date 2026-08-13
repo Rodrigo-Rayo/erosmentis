@@ -196,6 +196,25 @@ export function ReportsPanel() {
         </span>
       </section>
 
+      {serviceBreakdown.length > 0 && (
+        <section className={styles.breakdownSection}>
+          <h2 className={styles.sectionTitle}>Por tipo de sesión</h2>
+          <div className={styles.breakdownList}>
+            {serviceBreakdown.map((item) => (
+              <div key={item.serviceTypeId} className={styles.breakdownRow}>
+                <span
+                  className={styles.breakdownDot}
+                  style={{ background: `var(--color-${item.colorToken})` }}
+                />
+                <span className={styles.breakdownName}>{item.name}</span>
+                <span className={styles.breakdownCount}>{item.sessionCount}</span>
+                <span className={styles.breakdownAmount}>{formatCents(item.billedCents)}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <section className={styles.breakdownSection}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Gastos</h2>
@@ -252,25 +271,6 @@ export function ReportsPanel() {
 
       {isAddingExpense && (
         <ExpenseSheet onClose={() => setIsAddingExpense(false)} onSaved={() => setIsAddingExpense(false)} />
-      )}
-
-      {serviceBreakdown.length > 0 && (
-        <section className={styles.breakdownSection}>
-          <h2 className={styles.sectionTitle}>Por tipo de sesión</h2>
-          <div className={styles.breakdownList}>
-            {serviceBreakdown.map((item) => (
-              <div key={item.serviceTypeId} className={styles.breakdownRow}>
-                <span
-                  className={styles.breakdownDot}
-                  style={{ background: `var(--color-${item.colorToken})` }}
-                />
-                <span className={styles.breakdownName}>{item.name}</span>
-                <span className={styles.breakdownCount}>{item.sessionCount}</span>
-                <span className={styles.breakdownAmount}>{formatCents(item.billedCents)}</span>
-              </div>
-            ))}
-          </div>
-        </section>
       )}
 
       {yearBreakdown.length > 1 && (
