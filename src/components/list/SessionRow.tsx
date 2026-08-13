@@ -64,19 +64,22 @@ export function SessionRow({ session, client, serviceType, onMarkPaid }: Session
         />
       </span>
       <span className={styles.body}>
-        <div className={styles.name}>{client?.displayName ?? 'Paciente'}</div>
+        <div className={styles.topRow}>
+          <span className={styles.name}>{client?.displayName ?? 'Paciente'}</span>
+          {isCancelled ? (
+            <span className={`${styles.statusChip} ${styles.statusCancelled}`}>Cancelada</span>
+          ) : (
+            <span className={`${styles.statusChip} ${STATUS_CLASS[session.paymentStatus]}`}>
+              {STATUS_LABEL[session.paymentStatus]}
+            </span>
+          )}
+        </div>
         <div className={styles.meta}>
           <span className={styles.serviceTypeName}>{serviceType?.name ?? ''}</span>
           {session.modality === 'online' ? (
             <MonitorIcon className={styles.modalityIcon} aria-label="Online" />
           ) : (
             <HomeIcon className={styles.modalityIcon} aria-label="Presencial" />
-          )}
-          {isCancelled && <span className={`${styles.statusChip} ${styles.statusCancelled}`}>Cancelada</span>}
-          {!isCancelled && (
-            <span className={`${styles.statusChip} ${STATUS_CLASS[session.paymentStatus]}`}>
-              {STATUS_LABEL[session.paymentStatus]}
-            </span>
           )}
         </div>
       </span>
