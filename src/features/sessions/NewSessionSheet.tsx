@@ -180,11 +180,15 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
           skippedStartAts.length > 0
             ? `, ${skippedStartAts.length} omitida${skippedStartAts.length > 1 ? 's' : ''} por coincidir con otra sesión`
             : ''
-        toast.show(`${sessions.length} sesiones creadas${skippedMessage}`, {
-          label: 'Deshacer',
-          onClick: () =>
-            Promise.all(sessions.map((s) => softDeleteSession(s.id))).then(() => undefined),
-        })
+        toast.show(
+          `${sessions.length} sesiones creadas${skippedMessage}`,
+          {
+            label: 'Deshacer',
+            onClick: () =>
+              Promise.all(sessions.map((s) => softDeleteSession(s.id))).then(() => undefined),
+          },
+          skippedStartAts.length > 0 ? { tone: 'warning', durationMs: 5000 } : undefined,
+        )
       } else {
         const session = await createSession({
           clientId: client.id,
@@ -216,7 +220,7 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
       <div className={styles.form}>
         <section className={styles.field}>
           <label className={styles.label}>Paciente</label>
-          <ClientAutocomplete value={client} onSelect={setClient} autoFocus={!presetClientId} />
+          <ClientAutocomplete value={client} onSelect={setClient} />
         </section>
 
         {serviceTypes.length > 0 && (

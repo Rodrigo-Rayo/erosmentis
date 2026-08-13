@@ -1,6 +1,7 @@
 import type { KeyboardEvent } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { formatCents } from '@/domain/money'
+import { MonitorIcon, HomeIcon, CoinIcon } from '@/components/icons/SessionIcons'
 import type { Client, ServiceType, Session } from '@/domain/types'
 import styles from './SessionRow.module.css'
 
@@ -55,13 +56,22 @@ export function SessionRow({ session, client, serviceType, onMarkPaid }: Session
       onClick={openDetail}
       onKeyDown={handleKeyDown}
     >
-      <span className={styles.time}>{time}</span>
-      <span className={styles.accent} style={{ background: `var(--color-${serviceType?.colorToken ?? 'accent'})` }} />
+      <span className={styles.timeCol}>
+        <span className={styles.time}>{time}</span>
+        <span
+          className={styles.dot}
+          style={{ background: `var(--color-${serviceType?.colorToken ?? 'accent'})` }}
+        />
+      </span>
       <span className={styles.body}>
         <div className={styles.name}>{client?.displayName ?? 'Paciente'}</div>
         <div className={styles.meta}>
           <span className={styles.serviceTypeName}>{serviceType?.name ?? ''}</span>
-          <span className={styles.modalityIcon}>{session.modality === 'online' ? '💻' : '🏠'}</span>
+          {session.modality === 'online' ? (
+            <MonitorIcon className={styles.modalityIcon} aria-label="Online" />
+          ) : (
+            <HomeIcon className={styles.modalityIcon} aria-label="Presencial" />
+          )}
           {isCancelled && <span className={`${styles.statusChip} ${styles.statusCancelled}`}>Cancelada</span>}
           {!isCancelled && (
             <span className={`${styles.statusChip} ${STATUS_CLASS[session.paymentStatus]}`}>
@@ -74,12 +84,13 @@ export function SessionRow({ session, client, serviceType, onMarkPaid }: Session
         <button
           type="button"
           className={styles.payButton}
+          aria-label="Marcar como cobrada"
           onClick={(e) => {
             e.stopPropagation()
             onMarkPaid(session)
           }}
         >
-          Cobrar
+          <CoinIcon className={styles.payIcon} />
         </button>
       ) : (
         <span className={styles.price}>{formatCents(session.priceCents)}</span>

@@ -27,6 +27,11 @@
   width: fit-content;
 }
 
+.toastWarning {
+  background: var(--color-pending);
+  color: var(--color-ink);
+}
+
 .action {
   background: none;
   border: none;
@@ -34,4 +39,8 @@
   font-weight: 600;
   cursor: pointer;
   flex-shrink: 0;
+}
+
+.toastWarning .action {
+  color: var(--color-accent);
 }

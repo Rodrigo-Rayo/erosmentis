@@ -8,14 +8,22 @@ interface ToastAction {
   onClick: () => void | Promise<void>
 }
 
+type ToastTone = 'default' | 'warning'
+
+interface ToastShowOptions {
+  tone?: ToastTone
+  durationMs?: number
+}
+
 interface ToastMessage {
   id: string
   text: string
   action?: ToastAction
+  tone: ToastTone
 }
 
 interface ToastContextValue {
-  show: (text: string, action?: ToastAction) => void
+  show: (text: string, action?: ToastAction, options?: ToastShowOptions) => void
 }
 
 const ToastContext = createContext<ToastContextValue | null>(null)
@@ -29,12 +37,13 @@ const APP_ERROR_EVENT = 'app:error'
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<ToastMessage[]>([])
 
-  const show = useCallback((text: string, action?: ToastAction) => {
+  const show = useCallback((text: string, action?: ToastAction, options?: ToastShowOptions) => {
     const id = crypto.randomUUID()
-    setToasts((prev) => [...prev.slice(-(MAX_VISIBLE_TOASTS - 1)), { id, text, action }])
+    const tone = options?.tone ?? 'default'
+    setToasts((prev) => [...prev.slice(-(MAX_VISIBLE_TOASTS - 1)), { id, text, action, tone }])
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id))
-    }, TOAST_DURATION_MS)
+    }, options?.durationMs ?? TOAST_DURATION_MS)
   }, [])
 
   // Surfaces errors from outside React (e.g. an unhandled promise rejection caught in
@@ -65,7 +74,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           {toasts.map((toast) => (
             <motion.div
               key={toast.id}
-              className={styles.toast}
+              className={toast.tone === 'warning' ? `${styles.toast} ${styles.toastWarning}` : styles.toast}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 10 }}
