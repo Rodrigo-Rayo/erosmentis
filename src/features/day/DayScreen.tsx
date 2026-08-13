@@ -3,7 +3,6 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Link, useLocation } from 'react-router-dom'
 import { db } from '@/db/database'
 import { dayRange, monthRange, weekRange, shiftDays, capitalize } from '@/domain/dates'
-import { pendingSessions } from '@/domain/totals'
 import { getWeekFreeSlots, startOfWeekMonday } from '@/domain/schedule'
 import { listSessionsInRange, markSessionPaid } from '@/db/repositories/sessions.repo'
 import { SessionRow } from '@/components/list/SessionRow'
@@ -11,13 +10,29 @@ import { MonthCalendarGrid } from '@/features/month/MonthCalendarGrid'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { MarkPaidSheet } from '@/features/sessions/MarkPaidSheet'
 import { useToast } from '@/components/ui/Toast'
-import { formatCents } from '@/domain/money'
 import { getErrorMessage } from '@/domain/errors'
 import type { PaymentMethod, Session } from '@/domain/types'
 import styles from './DayScreen.module.css'
 
 function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+}
+
+function formatWeekRangeLabel(monday: Date): string {
+  const sunday = new Date(monday)
+  sunday.setDate(sunday.getDate() + 6)
+
+  const sameMonth = monday.getMonth() === sunday.getMonth() && monday.getFullYear() === sunday.getFullYear()
+  const dayOnly = new Intl.DateTimeFormat('es-ES', { day: 'numeric' })
+  const dayMonth = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short' })
+  const dayMonthYear = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
+
+  if (sameMonth) {
+    return `${dayOnly.format(monday)}–${dayMonth.format(sunday)}`
+  }
+  const sameYear = monday.getFullYear() === sunday.getFullYear()
+  const startLabel = sameYear ? dayMonth.format(monday) : dayMonthYear.format(monday)
+  return `${startLabel} – ${dayMonthYear.format(sunday)}`
 }
 
 export function DayScreen() {
@@ -66,14 +81,6 @@ export function DayScreen() {
   const clientsById = new Map(clients.map((c) => [c.id, c]))
   const serviceTypesById = new Map(serviceTypes.map((s) => [s.id, s]))
 
-  const allPendingCandidates = useLiveQuery(
-    () => db.sessions.where('paymentStatus').equals('pending').toArray(),
-    [],
-    [],
-  )
-  const overduePending = pendingSessions(allPendingCandidates)
-  const overdueTotal = overduePending.reduce((sum, s) => sum + s.priceCents, 0)
-
   const today = new Date()
   const selectedDayLabel = isSameDay(selectedDay, today)
     ? 'Hoy'
@@ -86,6 +93,7 @@ export function DayScreen() {
   const monthLabel = capitalize(
     new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(monthCursor),
   )
+  const weekRangeLabel = formatWeekRangeLabel(weekMonday)
 
   async function handleConfirmPayment(method: PaymentMethod) {
     if (!payingSession) return
@@ -113,16 +121,6 @@ export function DayScreen() {
           className={styles.mark}
         />
       </header>
-
-      {overduePending.length > 0 && (
-        <section className={styles.pendingBanner}>
-          <div>
-            <div className={styles.pendingTitle}>Pendiente de cobro</div>
-            <div className={styles.pendingSubtitle}>{overduePending.length} sesiones</div>
-          </div>
-          <div className={styles.pendingAmount}>{formatCents(overdueTotal)}</div>
-        </section>
-      )}
 
       <section className={styles.calendarSection}>
         <div className={styles.calendarNav}>
@@ -167,7 +165,10 @@ export function DayScreen() {
           <button type="button" className={styles.navButton} onClick={() => setWeekOffset((v) => v - 1)}>
             ‹
           </button>
-          <span className={styles.weekLabel}>Horas libres esta semana</span>
+          <span className={styles.weekLabelGroup}>
+            <span className={styles.weekLabel}>Horas libres esta semana</span>
+            <span className={styles.weekRange}>{weekRangeLabel}</span>
+          </span>
           <button type="button" className={styles.navButton} onClick={() => setWeekOffset((v) => v + 1)}>
             ›
           </button>
