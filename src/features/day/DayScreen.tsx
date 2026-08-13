@@ -9,10 +9,13 @@ import { SessionRow } from '@/components/list/SessionRow'
 import { MonthCalendarGrid } from '@/features/month/MonthCalendarGrid'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { MarkPaidSheet } from '@/features/sessions/MarkPaidSheet'
+import { Chip } from '@/components/ui/Chip'
 import { useToast } from '@/components/ui/Toast'
 import { getErrorMessage } from '@/domain/errors'
 import type { PaymentMethod, Session } from '@/domain/types'
 import styles from './DayScreen.module.css'
+
+type SubTab = 'dia' | 'disponibilidad'
 
 function formatWeekRangeLabel(monday: Date): string {
   const sunday = new Date(monday)
@@ -38,6 +41,7 @@ export function DayScreen() {
   const [selectedDay, setSelectedDay] = useState<Date>(() => new Date())
   const [monthOffset, setMonthOffset] = useState(0)
   const [weekOffset, setWeekOffset] = useState(0)
+  const [subTab, setSubTab] = useState<SubTab>('dia')
 
   const monthCursor = useMemo(() => {
     const date = new Date()
@@ -118,85 +122,106 @@ export function DayScreen() {
         />
       </header>
 
-      <section className={styles.calendarSection}>
-        <div className={styles.calendarNav}>
-          <button type="button" className={styles.navButton} onClick={() => setMonthOffset((v) => v - 1)}>
-            ‹
-          </button>
-          <span className={styles.monthLabel}>{monthLabel}</span>
-          <button type="button" className={styles.navButton} onClick={() => setMonthOffset((v) => v + 1)}>
-            ›
-          </button>
-        </div>
-        <MonthCalendarGrid
-          cursor={monthCursor}
-          sessions={monthSessions}
-          selectedDay={selectedDay}
-          onSelectDay={setSelectedDay}
-        />
-      </section>
+      <div className={styles.subTabToggle}>
+        <Chip selected={subTab === 'dia'} tone="accent" onClick={() => setSubTab('dia')}>
+          Día
+        </Chip>
+        <Chip selected={subTab === 'disponibilidad'} tone="accent" onClick={() => setSubTab('disponibilidad')}>
+          Disponibilidad
+        </Chip>
+      </div>
 
-      <section className={styles.list}>
-        {daySessions.length === 0 ? (
-          <EmptyState
-            emoji="🌿"
-            title="Sin sesiones este día"
-            description="Toca el botón + para agendar la próxima."
-          />
-        ) : (
-          daySessions.map((session) => (
-            <SessionRow
-              key={session.id}
-              session={session}
-              client={clientsById.get(session.clientId)}
-              serviceType={serviceTypesById.get(session.serviceTypeId)}
-              onMarkPaid={setPayingSession}
+      {subTab === 'dia' ? (
+        <>
+          <section className={styles.calendarSection}>
+            <div className={styles.calendarNav}>
+              <button
+                type="button"
+                className={styles.navButton}
+                onClick={() => setMonthOffset((v) => v - 1)}
+              >
+                ‹
+              </button>
+              <span className={styles.monthLabel}>{monthLabel}</span>
+              <button
+                type="button"
+                className={styles.navButton}
+                onClick={() => setMonthOffset((v) => v + 1)}
+              >
+                ›
+              </button>
+            </div>
+            <MonthCalendarGrid
+              cursor={monthCursor}
+              sessions={monthSessions}
+              selectedDay={selectedDay}
+              onSelectDay={setSelectedDay}
             />
-          ))
-        )}
-      </section>
+          </section>
 
-      <section className={styles.weekSection}>
-        <div className={styles.weekNav}>
-          <button type="button" className={styles.navButton} onClick={() => setWeekOffset((v) => v - 1)}>
-            ‹
-          </button>
-          <span className={styles.weekLabelGroup}>
-            <span className={styles.weekLabel}>Horas libres esta semana</span>
-            <span className={styles.weekRange}>{weekRangeLabel}</span>
-          </span>
-          <button type="button" className={styles.navButton} onClick={() => setWeekOffset((v) => v + 1)}>
-            ›
-          </button>
-        </div>
-        {freeSlotsByDay.length === 0 ? (
-          <p className={styles.weekEmpty}>Sin huecos libres esta semana.</p>
-        ) : (
-          <div className={styles.weekList}>
-            {freeSlotsByDay.map(({ date, slots }) => (
-              <div key={date.toISOString()} className={styles.weekDayRow}>
-                <span className={styles.weekDayLabel}>
-                  {capitalize(
-                    new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric' }).format(date),
-                  )}
-                </span>
-                <div className={styles.weekSlotChips}>
-                  {slots.map((slot) => (
-                    <Link
-                      key={slot.hour}
-                      to="/sesion/nueva"
-                      state={{ backgroundLocation: location, presetStartAt: slot.startAt }}
-                      className={styles.weekSlotChip}
-                    >
-                      {String(slot.hour).padStart(2, '0')}:00
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            ))}
+          <section className={styles.list}>
+            {daySessions.length === 0 ? (
+              <EmptyState
+                emoji="🌿"
+                title="Sin sesiones este día"
+                description="Toca el botón + para agendar la próxima."
+              />
+            ) : (
+              daySessions.map((session) => (
+                <SessionRow
+                  key={session.id}
+                  session={session}
+                  client={clientsById.get(session.clientId)}
+                  serviceType={serviceTypesById.get(session.serviceTypeId)}
+                  onMarkPaid={setPayingSession}
+                />
+              ))
+            )}
+          </section>
+        </>
+      ) : (
+        <section className={styles.weekSection}>
+          <div className={styles.weekNav}>
+            <button type="button" className={styles.navButton} onClick={() => setWeekOffset((v) => v - 1)}>
+              ‹
+            </button>
+            <span className={styles.weekLabelGroup}>
+              <span className={styles.weekLabel}>Horas libres esta semana</span>
+              <span className={styles.weekRange}>{weekRangeLabel}</span>
+            </span>
+            <button type="button" className={styles.navButton} onClick={() => setWeekOffset((v) => v + 1)}>
+              ›
+            </button>
           </div>
-        )}
-      </section>
+          {freeSlotsByDay.length === 0 ? (
+            <p className={styles.weekEmpty}>Sin huecos libres esta semana.</p>
+          ) : (
+            <div className={styles.weekList}>
+              {freeSlotsByDay.map(({ date, slots }) => (
+                <div key={date.toISOString()} className={styles.weekDayRow}>
+                  <span className={styles.weekDayLabel}>
+                    {capitalize(
+                      new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric' }).format(date),
+                    )}
+                  </span>
+                  <div className={styles.weekSlotChips}>
+                    {slots.map((slot) => (
+                      <Link
+                        key={slot.hour}
+                        to="/sesion/nueva"
+                        state={{ backgroundLocation: location, presetStartAt: slot.startAt }}
+                        className={styles.weekSlotChip}
+                      >
+                        {String(slot.hour).padStart(2, '0')}:00
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {payingSession && (
         <MarkPaidSheet
