@@ -14,10 +14,6 @@ import { getErrorMessage } from '@/domain/errors'
 import type { PaymentMethod, Session } from '@/domain/types'
 import styles from './DayScreen.module.css'
 
-function isSameDay(a: Date, b: Date): boolean {
-  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
-}
-
 function formatWeekRangeLabel(monday: Date): string {
   const sunday = new Date(monday)
   sunday.setDate(sunday.getDate() + 6)
@@ -71,24 +67,24 @@ export function DayScreen() {
     [],
   )
   const weekMonday = useMemo(() => startOfWeekMonday(weekCursor), [weekCursor])
-  const freeSlotsByDay = useMemo(
-    () => getWeekFreeSlots(weekMonday, weekSessions),
-    [weekMonday, weekSessions],
-  )
+  const freeSlotsByDay = useMemo(() => {
+    const todayStart = new Date()
+    todayStart.setHours(0, 0, 0, 0)
+    // Don't show days that have already gone by — most relevant when viewing the current
+    // week midweek, e.g. on a Thursday there's no point listing Monday's free hours.
+    return getWeekFreeSlots(weekMonday, weekSessions).filter((d) => d.date >= todayStart)
+  }, [weekMonday, weekSessions])
 
   const clients = useLiveQuery(() => db.clients.toArray(), [], [])
   const serviceTypes = useLiveQuery(() => db.serviceTypes.toArray(), [], [])
   const clientsById = new Map(clients.map((c) => [c.id, c]))
   const serviceTypesById = new Map(serviceTypes.map((s) => [s.id, s]))
 
-  const today = new Date()
-  const selectedDayLabel = isSameDay(selectedDay, today)
-    ? 'Hoy'
-    : capitalize(
-        new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }).format(
-          selectedDay,
-        ),
-      )
+  const selectedDayLabel = capitalize(
+    new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric', month: 'long' }).format(
+      selectedDay,
+    ),
+  )
 
   const monthLabel = capitalize(
     new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(monthCursor),
@@ -111,7 +107,7 @@ export function DayScreen() {
     <div className={styles.wrapper}>
       <header className={styles.header}>
         <div className={styles.headerText}>
-          <p className={styles.eyebrow}>Día</p>
+          <p className={styles.eyebrow}>Calendario</p>
           <h1 className={styles.date}>{selectedDayLabel}</h1>
         </div>
         <img
