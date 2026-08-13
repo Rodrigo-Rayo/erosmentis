@@ -2,6 +2,7 @@ import Dexie, { type EntityTable } from 'dexie'
 import type {
   AppSettings,
   Client,
+  Expense,
   Package,
   Payment,
   ServiceType,
@@ -15,6 +16,7 @@ export class PsicoAgendaDB extends Dexie {
   packages!: EntityTable<Package, 'id'>
   payments!: EntityTable<Payment, 'id'>
   settings!: EntityTable<AppSettings, 'id'>
+  expenses!: EntityTable<Expense, 'id'>
 
   constructor() {
     super('psicoagenda')
@@ -29,6 +31,10 @@ export class PsicoAgendaDB extends Dexie {
       settings: 'id',
     })
 
+    this.version(2).stores({
+      expenses: 'id, incurredAt, category',
+    })
+
     // Only 'updating' is hooked, not 'creating': every create* repository function already
     // stamps updatedAt explicitly, and bulkAdd/put during backup restore must preserve the
     // original historical updatedAt rather than having it overwritten to "now".
@@ -37,6 +43,7 @@ export class PsicoAgendaDB extends Dexie {
     this.sessions.hook('updating', (mods) => ({ ...mods, updatedAt: Date.now() }))
     this.packages.hook('updating', (mods) => ({ ...mods, updatedAt: Date.now() }))
     this.payments.hook('updating', (mods) => ({ ...mods, updatedAt: Date.now() }))
+    this.expenses.hook('updating', (mods) => ({ ...mods, updatedAt: Date.now() }))
   }
 }
 

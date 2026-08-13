@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest'
 import {
   calculateAverageSessionCents,
+  calculateExpenseCategoryBreakdown,
+  calculateExpensesCents,
   calculateServiceTypeBreakdown,
   calculateYearBreakdown,
 } from './reports'
-import type { ServiceType, Session } from './types'
+import type { Expense, ServiceType, Session } from './types'
 
 function makeSession(overrides: Partial<Session> = {}): Session {
   return {
@@ -96,6 +98,54 @@ describe('calculateYearBreakdown', () => {
       { year: 2025, billedCents: 14000, collectedCents: 6000 },
       { year: 2024, billedCents: 6000, collectedCents: 6000 },
     ])
+  })
+})
+
+function makeExpense(overrides: Partial<Expense> = {}): Expense {
+  return {
+    id: crypto.randomUUID(),
+    category: 'publicidad',
+    label: '',
+    amountCents: 3000,
+    incurredAt: Date.UTC(2026, 0, 15),
+    notes: '',
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+    deletedAt: null,
+    ...overrides,
+  }
+}
+
+describe('calculateExpensesCents', () => {
+  it('sums active expenses only, excluding soft-deleted ones', () => {
+    const expenses = [
+      makeExpense({ amountCents: 3000 }),
+      makeExpense({ amountCents: 5000 }),
+      makeExpense({ amountCents: 9000, deletedAt: Date.now() }),
+    ]
+
+    expect(calculateExpensesCents(expenses)).toBe(8000)
+  })
+})
+
+describe('calculateExpenseCategoryBreakdown', () => {
+  it('sums amount and count per category, sorted by amount descending', () => {
+    const expenses = [
+      makeExpense({ category: 'alquiler', amountCents: 40000 }),
+      makeExpense({ category: 'publicidad', amountCents: 3000 }),
+      makeExpense({ category: 'publicidad', amountCents: 2000 }),
+    ]
+
+    expect(calculateExpenseCategoryBreakdown(expenses)).toEqual([
+      { category: 'alquiler', label: 'Alquiler despacho', amountCents: 40000, expenseCount: 1 },
+      { category: 'publicidad', label: 'Publicidad', amountCents: 5000, expenseCount: 2 },
+    ])
+  })
+
+  it('excludes soft-deleted expenses', () => {
+    const expenses = [makeExpense({ category: 'otro', amountCents: 1000, deletedAt: Date.now() })]
+
+    expect(calculateExpenseCategoryBreakdown(expenses)).toEqual([])
   })
 })
 

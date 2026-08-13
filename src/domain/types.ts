@@ -108,6 +108,21 @@ export interface Payment {
   deletedAt: number | null
 }
 
+export type ExpenseCategory = 'publicidad' | 'alquiler' | 'otro'
+
+export interface Expense {
+  id: string
+  category: ExpenseCategory
+  /** Free-text label — required when category is 'otro', optional override otherwise. */
+  label: string
+  amountCents: number
+  incurredAt: number
+  notes: string
+  createdAt: number
+  updatedAt: number
+  deletedAt: number | null
+}
+
 export interface AppSettings {
   id: 'app'
   theme: 'system' | 'light' | 'dark'

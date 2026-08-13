@@ -1,0 +1,39 @@
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding-top: var(--space-2);
+}
+
+.chipRow {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-ink-muted);
+  font-weight: 600;
+}
+
+.input {
+  border: 1px solid var(--color-border);
+  background: var(--color-paper-raised);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  font-size: var(--text-base);
+  min-height: 52px;
+  font-family: inherit;
+  color: var(--color-ink);
+  width: 100%;
+}

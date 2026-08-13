@@ -1,6 +1,47 @@
 import { calculateMonthTotals } from './totals'
 import { isSessionBillable } from './pricing'
-import type { Session, ServiceType } from './types'
+import { sumCents } from './money'
+import type { Session, ServiceType, Expense, ExpenseCategory } from './types'
+
+export const EXPENSE_CATEGORY_LABELS: Record<ExpenseCategory, string> = {
+  publicidad: 'Publicidad',
+  alquiler: 'Alquiler despacho',
+  otro: 'Otro',
+}
+
+function activeExpenses(expenses: readonly Expense[]): Expense[] {
+  return expenses.filter((e) => e.deletedAt === null)
+}
+
+export function calculateExpensesCents(expenses: readonly Expense[]): number {
+  return sumCents(activeExpenses(expenses).map((e) => e.amountCents))
+}
+
+export interface ExpenseCategoryBreakdownItem {
+  category: ExpenseCategory
+  label: string
+  amountCents: number
+  expenseCount: number
+}
+
+/** Total spent and expense count per category, sorted by amount descending. */
+export function calculateExpenseCategoryBreakdown(
+  expenses: readonly Expense[],
+): ExpenseCategoryBreakdownItem[] {
+  const active = activeExpenses(expenses)
+  const totals = new Map<ExpenseCategory, { amountCents: number; expenseCount: number }>()
+
+  for (const expense of active) {
+    const entry = totals.get(expense.category) ?? { amountCents: 0, expenseCount: 0 }
+    entry.amountCents += expense.amountCents
+    entry.expenseCount += 1
+    totals.set(expense.category, entry)
+  }
+
+  return [...totals.entries()]
+    .map(([category, entry]) => ({ category, label: EXPENSE_CATEGORY_LABELS[category], ...entry }))
+    .sort((a, b) => b.amountCents - a.amountCents)
+}
 
 export interface ServiceTypeBreakdownItem {
   serviceTypeId: string

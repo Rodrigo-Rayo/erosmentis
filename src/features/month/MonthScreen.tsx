@@ -80,7 +80,7 @@ export function MonthScreen() {
           Mes
         </Chip>
         <Chip selected={subTab === 'informes'} tone="accent" onClick={() => setSubTab('informes')}>
-          Informes
+          Informes y gastos
         </Chip>
       </div>
 
