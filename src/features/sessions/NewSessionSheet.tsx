@@ -162,7 +162,7 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
     setIsSaving(true)
     try {
       if (repeatWeekly) {
-        const sessions = await createWeeklySeries(
+        const { sessions, skippedStartAts } = await createWeeklySeries(
           {
             clientId: client.id,
             serviceTypeId,
@@ -176,7 +176,11 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
           repeatIntervalWeeks,
         )
         addReminderSafely(() => downloadSessionsReminder(sessions, client, selectedServiceType ?? undefined))
-        toast.show(`${sessions.length} sesiones creadas`, {
+        const skippedMessage =
+          skippedStartAts.length > 0
+            ? `, ${skippedStartAts.length} omitida${skippedStartAts.length > 1 ? 's' : ''} por coincidir con otra sesión`
+            : ''
+        toast.show(`${sessions.length} sesiones creadas${skippedMessage}`, {
           label: 'Deshacer',
           onClick: () =>
             Promise.all(sessions.map((s) => softDeleteSession(s.id))).then(() => undefined),

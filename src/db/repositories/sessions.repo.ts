@@ -2,6 +2,7 @@ import Dexie from 'dexie'
 import { db } from '@/db/database'
 import { resolveSessionPrice } from '@/domain/pricing'
 import { generateWeeklyOccurrences } from '@/domain/dates'
+import { isSlotOccupied } from '@/domain/schedule'
 import { findConsumablePackage } from '@/db/repositories/packages.repo'
 import { getServiceType } from '@/db/repositories/serviceTypes.repo'
 import type { Modality, PaymentMethod, PaymentStatus, Session } from '@/domain/types'
@@ -66,20 +67,43 @@ export async function createSession(input: CreateSessionInput): Promise<Session>
   return session
 }
 
+export interface CreateWeeklySeriesResult {
+  sessions: Session[]
+  /** Occurrences skipped because another active session already overlapped that date/time. */
+  skippedStartAts: number[]
+}
+
 export async function createWeeklySeries(
   input: Omit<CreateSessionInput, 'seriesId'>,
   occurrenceCount: number,
   intervalWeeks = 1,
-): Promise<Session[]> {
+): Promise<CreateWeeklySeriesResult> {
   const seriesId = crypto.randomUUID()
   const startTimes = generateWeeklyOccurrences(input.startAt, occurrenceCount, intervalWeeks)
+  const serviceType = await getServiceType(input.serviceTypeId)
+  if (!serviceType) {
+    throw new Error(`Service type ${input.serviceTypeId} not found`)
+  }
+  const durationMin = input.durationMin ?? serviceType.durationMin
+
   const sessions: Session[] = []
+  const skippedStartAts: number[] = []
   for (const startAt of startTimes) {
-    // Sequential on purpose: each occurrence may consume the same package slot.
+    // Sequential on purpose: each occurrence may consume the same package slot, and each
+    // conflict check must see the sessions created by earlier iterations of this same loop.
+    const dayStart = new Date(startAt)
+    dayStart.setHours(0, 0, 0, 0)
+    const dayEnd = new Date(startAt)
+    dayEnd.setHours(23, 59, 59, 999)
+    const daySessions = await listSessionsInRange(dayStart.getTime(), dayEnd.getTime())
+    if (isSlotOccupied(daySessions, startAt, durationMin)) {
+      skippedStartAts.push(startAt)
+      continue
+    }
     const session = await createSession({ ...input, startAt, seriesId })
     sessions.push(session)
   }
-  return sessions
+  return { sessions, skippedStartAts }
 }
 
 export async function getSession(id: string): Promise<Session | undefined> {

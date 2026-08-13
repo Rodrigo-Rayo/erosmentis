@@ -20,7 +20,10 @@ interface ToastContextValue {
 
 const ToastContext = createContext<ToastContextValue | null>(null)
 
-const TOAST_DURATION_MS = 4000
+const TOAST_DURATION_MS = 2500
+// Keeps the stack from piling up when several actions happen in quick succession — only the
+// most recent couple of toasts stay on screen, older ones are dropped immediately.
+const MAX_VISIBLE_TOASTS = 2
 const APP_ERROR_EVENT = 'app:error'
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -28,7 +31,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
   const show = useCallback((text: string, action?: ToastAction) => {
     const id = crypto.randomUUID()
-    setToasts((prev) => [...prev, { id, text, action }])
+    setToasts((prev) => [...prev.slice(-(MAX_VISIBLE_TOASTS - 1)), { id, text, action }])
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id))
     }, TOAST_DURATION_MS)

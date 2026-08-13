@@ -175,18 +175,47 @@ describe('createWeeklySeries', () => {
     const serviceType = await getIndividualServiceType()
     const startAt = Date.UTC(2026, 7, 4, 17, 0, 0)
 
-    const sessions = await createWeeklySeries(
+    const { sessions, skippedStartAts } = await createWeeklySeries(
       { clientId: client.id, serviceTypeId: serviceType.id, startAt, modality: 'online' },
       3,
     )
 
     expect(sessions).toHaveLength(3)
+    expect(skippedStartAts).toHaveLength(0)
     const seriesIds = new Set(sessions.map((s) => s.seriesId))
     expect(seriesIds.size).toBe(1)
     expect(sessions[1].startAt - sessions[0].startAt).toBe(7 * 24 * 60 * 60 * 1000)
 
     const history = await listSessionsForClient(client.id)
     expect(history).toHaveLength(3)
+  })
+
+  it('skips an occurrence that would overlap an already-booked session, and still creates the rest', async () => {
+    const laura = await createClient({ kind: 'individual', people: [{ name: 'Laura Vidal' }] })
+    const otherClient = await createClient({ kind: 'individual', people: [{ name: 'Marta Otro' }] })
+    const serviceType = await getIndividualServiceType()
+    const startAt = Date.UTC(2026, 7, 4, 17, 0, 0) // a Tuesday, 17:00
+
+    // Someone else already has the second week's slot booked at the exact same time.
+    const conflictingStartAt = startAt + 7 * 24 * 60 * 60 * 1000
+    await createSession({
+      clientId: otherClient.id,
+      serviceTypeId: serviceType.id,
+      startAt: conflictingStartAt,
+      modality: 'online',
+    })
+
+    const { sessions, skippedStartAts } = await createWeeklySeries(
+      { clientId: laura.id, serviceTypeId: serviceType.id, startAt, modality: 'online' },
+      3,
+    )
+
+    expect(sessions).toHaveLength(2)
+    expect(skippedStartAts).toEqual([conflictingStartAt])
+    expect(sessions.map((s) => s.startAt)).not.toContain(conflictingStartAt)
+
+    const history = await listSessionsForClient(laura.id)
+    expect(history).toHaveLength(2)
   })
 })
 
@@ -195,7 +224,7 @@ describe('bulk series operations', () => {
     const client = await createClient({ kind: 'individual', people: [{ name: 'Serie Semanal' }] })
     const serviceType = await getIndividualServiceType()
     const startAt = Date.UTC(2026, 7, 3, 19, 0) // a Monday, 19:00
-    const sessions = await createWeeklySeries(
+    const { sessions } = await createWeeklySeries(
       { clientId: client.id, serviceTypeId: serviceType.id, startAt, modality: 'online' },
       4,
     )
