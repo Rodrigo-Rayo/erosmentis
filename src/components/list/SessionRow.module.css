@@ -126,8 +126,8 @@
 
 .payButton {
   flex-shrink: 0;
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   border: none;
   background: var(--color-positive);
   color: var(--color-paper-raised);
@@ -144,6 +144,6 @@
 }
 
 .payIcon {
-  width: 17px;
-  height: 17px;
+  width: 22px;
+  height: 22px;
 }

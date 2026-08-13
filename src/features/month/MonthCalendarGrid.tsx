@@ -1,3 +1,5 @@
+import { useEffect, useRef } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
 import { isSessionBillable } from '@/domain/pricing'
 import type { Session } from '@/domain/types'
 import styles from './MonthCalendarGrid.module.css'
@@ -46,6 +48,12 @@ export function MonthCalendarGrid({ cursor, sessions, selectedDay, onSelectDay }
   }
 
   const today = new Date()
+  const monthIndex = year * 12 + month
+  const prevMonthIndexRef = useRef(monthIndex)
+  const direction = monthIndex === prevMonthIndexRef.current ? 0 : monthIndex > prevMonthIndexRef.current ? 1 : -1
+  useEffect(() => {
+    prevMonthIndexRef.current = monthIndex
+  }, [monthIndex])
 
   return (
     <div className={styles.wrapper}>
@@ -56,32 +64,45 @@ export function MonthCalendarGrid({ cursor, sessions, selectedDay, onSelectDay }
           </span>
         ))}
       </div>
-      <div className={styles.grid}>
-        {cells.map(({ date, inMonth }) => {
-          const status = dotStatusForDay(sessions, date)
-          const isToday = dayKey(date) === dayKey(today)
-          const isSelected = selectedDay !== null && dayKey(date) === dayKey(selectedDay)
-          return (
-            <button
-              type="button"
-              key={date.toISOString()}
-              className={[
-                styles.cell,
-                !inMonth ? styles.outOfMonth : '',
-                isSelected ? styles.selected : '',
-                isToday && !isSelected ? styles.today : '',
-              ]
-                .filter(Boolean)
-                .join(' ')}
-              onClick={() => onSelectDay(date)}
-            >
-              <span className={styles.dayNumber}>{date.getDate()}</span>
-              {status !== 'none' && (
-                <span className={`${styles.dot} ${status === 'pending' ? styles.dotPending : styles.dotOk}`} />
-              )}
-            </button>
-          )
-        })}
+      <div className={styles.gridViewport}>
+        <AnimatePresence mode="wait" initial={false} custom={direction}>
+          <motion.div
+            key={monthIndex}
+            className={styles.grid}
+            initial={{ opacity: 0, x: direction * 28 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: direction * -28 }}
+            transition={{ duration: 0.26, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {cells.map(({ date, inMonth }) => {
+              const status = dotStatusForDay(sessions, date)
+              const isToday = dayKey(date) === dayKey(today)
+              const isSelected = selectedDay !== null && dayKey(date) === dayKey(selectedDay)
+              return (
+                <button
+                  type="button"
+                  key={date.toISOString()}
+                  className={[
+                    styles.cell,
+                    !inMonth ? styles.outOfMonth : '',
+                    isSelected ? styles.selected : '',
+                    isToday && !isSelected ? styles.today : '',
+                  ]
+                    .filter(Boolean)
+                    .join(' ')}
+                  onClick={() => onSelectDay(date)}
+                >
+                  <span className={styles.dayNumber}>{date.getDate()}</span>
+                  {status !== 'none' && (
+                    <span
+                      className={`${styles.dot} ${status === 'pending' ? styles.dotPending : styles.dotOk}`}
+                    />
+                  )}
+                </button>
+              )
+            })}
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   )

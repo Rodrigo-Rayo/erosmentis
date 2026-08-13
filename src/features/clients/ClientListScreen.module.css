@@ -67,6 +67,11 @@
   flex-shrink: 0;
 }
 
+.avatarIcon {
+  width: 20px;
+  height: 20px;
+}
+
 .name {
   font-weight: 600;
 }

@@ -25,6 +25,11 @@
   font-weight: 600;
 }
 
+.avatarIcon {
+  width: 30px;
+  height: 30px;
+}
+
 .name {
   font-size: var(--text-2xl);
 }

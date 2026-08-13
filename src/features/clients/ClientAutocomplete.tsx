@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { createClient, searchClients } from '@/db/repositories/clients.repo'
+import { CoupleIcon } from '@/components/icons/SessionIcons'
 import { listSessionsInRange } from '@/db/repositories/sessions.repo'
 import { useToast } from '@/components/ui/Toast'
 import { getErrorMessage } from '@/domain/errors'
@@ -72,7 +73,11 @@ export function ClientAutocomplete({ value, onSelect, autoFocus = false }: Clien
         }}
       >
         <span className={styles.avatar} aria-hidden="true">
-          {value.kind === 'couple' ? '💑' : value.displayName.charAt(0).toUpperCase()}
+          {value.kind === 'couple' ? (
+            <CoupleIcon className={styles.avatarIcon} />
+          ) : (
+            value.displayName.charAt(0).toUpperCase()
+          )}
         </span>
         <span className={styles.selectedName}>{value.displayName}</span>
         <span className={styles.change}>Cambiar</span>
@@ -107,7 +112,11 @@ export function ClientAutocomplete({ value, onSelect, autoFocus = false }: Clien
                 }}
               >
                 <span className={styles.avatar} aria-hidden="true">
-                  {client.kind === 'couple' ? '💑' : client.displayName.charAt(0).toUpperCase()}
+                  {client.kind === 'couple' ? (
+                    <CoupleIcon className={styles.avatarIcon} />
+                  ) : (
+                    client.displayName.charAt(0).toUpperCase()
+                  )}
                 </span>
                 {client.displayName}
               </button>

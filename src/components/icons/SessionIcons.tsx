@@ -32,6 +32,18 @@ export function HomeIcon(props: IconProps) {
   )
 }
 
+/** Couple client avatar — matches the thin line-icon style used in the bottom nav. */
+export function CoupleIcon(props: IconProps) {
+  return (
+    <svg {...BASE_PROPS} {...props}>
+      <circle cx="8.5" cy="8.7" r="3" />
+      <circle cx="15.5" cy="8.7" r="3" />
+      <path d="M3.3 19c.5-3.2 2.5-4.9 5.2-4.9s4.7 1.7 5.2 4.9" />
+      <path d="M10.3 19c.5-3.2 2.5-4.9 5.2-4.9s4.7 1.7 5.2 4.9" />
+    </svg>
+  )
+}
+
 /** Euro mark for the quick "mark as paid" action. */
 export function CoinIcon(props: IconProps) {
   return (

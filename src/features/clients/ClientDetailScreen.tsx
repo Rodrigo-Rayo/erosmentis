@@ -18,6 +18,7 @@ import { useState } from 'react'
 import { MarkPaidSheet } from '@/features/sessions/MarkPaidSheet'
 import { useToast } from '@/components/ui/Toast'
 import { useNotFoundAfterDelay } from '@/hooks/useNotFoundAfterDelay'
+import { CoupleIcon } from '@/components/icons/SessionIcons'
 import type { PaymentMethod, Session } from '@/domain/types'
 import styles from './ClientDetailScreen.module.css'
 
@@ -90,7 +91,11 @@ export function ClientDetailScreen() {
     <div className={styles.wrapper}>
       <header className={styles.header}>
         <span className={styles.avatar} aria-hidden="true">
-          {client.kind === 'couple' ? '💑' : client.displayName.charAt(0).toUpperCase()}
+          {client.kind === 'couple' ? (
+            <CoupleIcon className={styles.avatarIcon} />
+          ) : (
+            client.displayName.charAt(0).toUpperCase()
+          )}
         </span>
         <h1 className={styles.name}>{client.displayName}</h1>
         <div className={styles.contactRow}>

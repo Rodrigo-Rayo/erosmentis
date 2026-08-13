@@ -5,6 +5,7 @@ import { Sheet } from '@/components/ui/Sheet'
 import { Button } from '@/components/ui/Button'
 import { Chip } from '@/components/ui/Chip'
 import { useToast } from '@/components/ui/Toast'
+import { CoupleIcon } from '@/components/icons/SessionIcons'
 import { getClient, updateClient, archiveClient, unarchiveClient } from '@/db/repositories/clients.repo'
 import { getErrorMessage } from '@/domain/errors'
 import type { ClientKind } from '@/domain/types'
@@ -97,7 +98,8 @@ export function EditClientSheet() {
             Individual
           </Chip>
           <Chip selected={kind === 'couple'} tone="accent" onClick={() => setKind('couple')}>
-            💑 Pareja
+            <CoupleIcon className={styles.chipIcon} aria-hidden="true" />
+            <span>Pareja</span>
           </Chip>
         </div>
 

@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { searchClients } from '@/db/repositories/clients.repo'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { CoupleIcon } from '@/components/icons/SessionIcons'
 import styles from './ClientListScreen.module.css'
 
 export function ClientListScreen() {
@@ -44,7 +45,11 @@ export function ClientListScreen() {
             <li key={client.id}>
               <Link to={`/clientes/${client.id}`} className={styles.item}>
                 <span className={styles.avatar} aria-hidden="true">
-                  {client.kind === 'couple' ? '💑' : client.displayName.charAt(0).toUpperCase()}
+                  {client.kind === 'couple' ? (
+                    <CoupleIcon className={styles.avatarIcon} />
+                  ) : (
+                    client.displayName.charAt(0).toUpperCase()
+                  )}
                 </span>
                 <span className={styles.name}>{client.displayName}</span>
               </Link>

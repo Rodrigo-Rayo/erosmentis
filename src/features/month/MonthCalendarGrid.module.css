@@ -16,6 +16,10 @@
   font-weight: 600;
 }
 
+.gridViewport {
+  overflow: hidden;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
@@ -34,7 +38,10 @@
   border-radius: var(--radius-sm);
   cursor: pointer;
   color: var(--color-ink);
-  transition: background-color var(--duration-fast) var(--ease-out-expo);
+  transition:
+    background-color var(--duration-normal) var(--ease-out-expo),
+    color var(--duration-normal) var(--ease-out-expo),
+    transform var(--duration-normal) var(--ease-out-expo);
 }
 
 .cell:hover:not(.selected) {
@@ -55,9 +62,19 @@
   color: var(--color-accent);
 }
 
+@keyframes selectPop {
+  from {
+    transform: scale(0.82);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
 .selected {
   background: var(--color-accent);
   box-shadow: var(--shadow-sm);
+  animation: selectPop var(--duration-normal) var(--ease-out-expo);
 }
 
 .selected .dayNumber {

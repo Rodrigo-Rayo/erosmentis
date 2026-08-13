@@ -51,6 +51,10 @@ button {
   -webkit-tap-highlight-color: transparent;
 }
 
+input[type='checkbox'] {
+  accent-color: var(--color-accent);
+}
+
 a {
   color: inherit;
 }
