@@ -214,3 +214,79 @@ export async function restoreSession(sessionId: string): Promise<void> {
     await Promise.all(payments.map((p) => db.payments.update(p.id, { deletedAt: null })))
   })
 }
+
+/** Non-deleted sessions in a recurring series, from `fromStartAt` onward (inclusive), oldest first. */
+export async function listFutureSeriesSessions(
+  seriesId: string,
+  fromStartAt: number,
+  excludeSessionId?: string,
+): Promise<Session[]> {
+  const sessions = await db.sessions.where('seriesId').equals(seriesId).toArray()
+  return sessions
+    .filter((s) => s.deletedAt === null && s.startAt >= fromStartAt && s.id !== excludeSessionId)
+    .sort((a, b) => a.startAt - b.startAt)
+}
+
+export interface UpdateSeriesInput {
+  modality?: Modality
+  notes?: string
+  /** Shifts every occurrence's time-of-day by this many ms, keeping each one on its own date. */
+  timeShiftMs?: number
+}
+
+/** Applies a time-of-day shift and/or modality/notes to every future occurrence of a series at
+ * once — e.g. moving a weekly 19:00 slot to 19:30 going forward, without touching past sessions
+ * or their individual dates. Returns how many sessions were updated. */
+export async function updateFutureSeriesSessions(
+  seriesId: string,
+  fromStartAt: number,
+  changes: UpdateSeriesInput,
+  excludeSessionId?: string,
+): Promise<number> {
+  const sessions = await listFutureSeriesSessions(seriesId, fromStartAt, excludeSessionId)
+  await db.transaction('rw', db.sessions, async () => {
+    for (const session of sessions) {
+      const patch: Partial<Session> = {}
+      if (changes.modality !== undefined) patch.modality = changes.modality
+      if (changes.notes !== undefined) patch.notes = changes.notes
+      if (changes.timeShiftMs !== undefined) patch.startAt = session.startAt + changes.timeShiftMs
+      if (Object.keys(patch).length > 0) {
+        await db.sessions.update(session.id, patch)
+      }
+    }
+  })
+  return sessions.length
+}
+
+/** Soft-deletes this and every future occurrence of a series together (their payments too), for
+ * when a patient stops needing a standing weekly slot. Returns the deleted session ids for undo. */
+export async function softDeleteFutureSeriesSessions(
+  seriesId: string,
+  fromStartAt: number,
+): Promise<string[]> {
+  const sessions = await listFutureSeriesSessions(seriesId, fromStartAt)
+  await db.transaction('rw', db.sessions, db.payments, async () => {
+    for (const session of sessions) {
+      await db.sessions.update(session.id, { deletedAt: Date.now() })
+      const payments = await db.payments.where('sessionId').equals(session.id).toArray()
+      await Promise.all(
+        payments
+          .filter((p) => p.deletedAt === null)
+          .map((p) => db.payments.update(p.id, { deletedAt: Date.now() })),
+      )
+    }
+  })
+  return sessions.map((s) => s.id)
+}
+
+/** Restores a batch of soft-deleted sessions and their payments — the undo side of
+ * softDeleteFutureSeriesSessions. */
+export async function restoreSessions(sessionIds: readonly string[]): Promise<void> {
+  await db.transaction('rw', db.sessions, db.payments, async () => {
+    for (const sessionId of sessionIds) {
+      await db.sessions.update(sessionId, { deletedAt: null })
+      const payments = await db.payments.where('sessionId').equals(sessionId).toArray()
+      await Promise.all(payments.map((p) => db.payments.update(p.id, { deletedAt: null })))
+    }
+  })
+}

@@ -207,12 +207,12 @@ export function DayScreen() {
                   <div className={styles.weekSlotChips}>
                     {slots.map((slot) => (
                       <Link
-                        key={slot.hour}
+                        key={`${slot.hour}:${slot.minute}`}
                         to="/sesion/nueva"
                         state={{ backgroundLocation: location, presetStartAt: slot.startAt }}
                         className={styles.weekSlotChip}
                       >
-                        {String(slot.hour).padStart(2, '0')}:00
+                        {String(slot.hour).padStart(2, '0')}:{String(slot.minute).padStart(2, '0')}
                       </Link>
                     ))}
                   </div>

@@ -21,14 +21,22 @@ export function getBusinessHoursForWeekday(weekday: number): BusinessHours | nul
   return WEEKLY_BUSINESS_HOURS[weekday] ?? null
 }
 
-/** Fixed, one-tap 1-hour slot start-hours for a given calendar day, per the practice's set schedule.
- * These are a convenience shortcut, not a restriction — any other time can still be entered manually. */
-export function getFixedHoursForDay(date: Date): number[] {
+const SLOT_STEP_MIN = 30
+const SESSION_DURATION_MIN = 60
+
+/** Fixed, one-tap slot start times (in minutes from midnight) for a given calendar day, per the
+ * practice's set schedule. Stepped every half hour — so a session can start on the hour or the
+ * half hour, e.g. to leave a buffer after a previous appointment — but only where a full 1-hour
+ * session still fits before closing time. These are a convenience shortcut, not a restriction —
+ * any other time can still be entered manually. */
+export function getFixedSlotStartMinutes(date: Date): number[] {
   const hours = getBusinessHoursForWeekday(date.getDay())
   if (!hours) return []
+  const startMin = hours.startHour * 60
+  const endMin = hours.endHour * 60
   const result: number[] = []
-  for (let h = hours.startHour; h < hours.endHour; h += 1) {
-    result.push(h)
+  for (let m = startMin; m + SESSION_DURATION_MIN <= endMin; m += SLOT_STEP_MIN) {
+    result.push(m)
   }
   return result
 }
@@ -49,17 +57,21 @@ export function isSlotOccupied(
 
 export interface DayHourSlot {
   hour: number
+  minute: number
   startAt: number
   occupied: boolean
 }
 
-/** Builds `date`'s fixed hourly slots, each flagged as occupied against the given sessions. */
+/** Builds `date`'s fixed half-hour-stepped slots, each flagged as occupied — meaning a full
+ * 1-hour session starting there would overlap an existing one — against the given sessions. */
 export function getDayHourSlots(date: Date, sessions: readonly Session[]): DayHourSlot[] {
-  return getFixedHoursForDay(date).map((hour) => {
+  return getFixedSlotStartMinutes(date).map((totalMinutes) => {
+    const hour = Math.floor(totalMinutes / 60)
+    const minute = totalMinutes % 60
     const slotStart = new Date(date)
-    slotStart.setHours(hour, 0, 0, 0)
+    slotStart.setHours(hour, minute, 0, 0)
     const startAt = slotStart.getTime()
-    return { hour, startAt, occupied: isSlotOccupied(sessions, startAt) }
+    return { hour, minute, startAt, occupied: isSlotOccupied(sessions, startAt, SESSION_DURATION_MIN) }
   })
 }
 

@@ -10,9 +10,13 @@ import {
   getSession,
   markSessionPaid,
   softDeleteSession,
+  softDeleteFutureSeriesSessions,
   restoreSession,
+  restoreSessions,
+  listFutureSeriesSessions,
   updateSessionAttendance,
   updateSessionDetails,
+  updateFutureSeriesSessions,
 } from '@/db/repositories/sessions.repo'
 import { listServiceTypes } from '@/db/repositories/serviceTypes.repo'
 import { downloadSessionReminder } from './reminderExport'
@@ -50,6 +54,7 @@ export function SessionDetailSheet() {
   const [editModality, setEditModality] = useState<Modality>('online')
   const [editPriceEuros, setEditPriceEuros] = useState('0')
   const [editNotes, setEditNotes] = useState('')
+  const [applyToSeries, setApplyToSeries] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
 
   const session = useLiveQuery(() => (id ? getSession(id) : undefined), [id])
@@ -63,6 +68,14 @@ export function SessionDetailSheet() {
     [session?.serviceTypeId],
   )
   const serviceTypes = useLiveQuery(() => listServiceTypes(), [], [])
+  const futureSeriesSessions = useLiveQuery(
+    () =>
+      session?.seriesId
+        ? listFutureSeriesSessions(session.seriesId, session.startAt, session.id)
+        : Promise.resolve([]),
+    [session?.seriesId, session?.startAt, session?.id],
+    [],
+  )
 
   function enterEditMode() {
     if (!session) return
@@ -71,6 +84,7 @@ export function SessionDetailSheet() {
     setEditModality(session.modality)
     setEditPriceEuros((session.priceCents / 100).toString())
     setEditNotes(session.notes)
+    setApplyToSeries(false)
     setIsEditing(true)
   }
 
@@ -91,6 +105,20 @@ export function SessionDetailSheet() {
       toast.show('Sesión eliminada', {
         label: 'Deshacer',
         onClick: () => restoreSession(session.id),
+      })
+      handleClose()
+    } catch (error) {
+      toast.show(getErrorMessage(error))
+    }
+  }
+
+  async function handleDeleteSeries() {
+    if (!session?.seriesId) return
+    try {
+      const deletedIds = await softDeleteFutureSeriesSessions(session.seriesId, session.startAt)
+      toast.show(`${deletedIds.length} sesiones eliminadas`, {
+        label: 'Deshacer',
+        onClick: () => restoreSessions(deletedIds),
       })
       handleClose()
     } catch (error) {
@@ -123,7 +151,21 @@ export function SessionDetailSheet() {
         modality: editModality,
         notes: editNotes,
       })
-      toast.show('Sesión actualizada')
+      if (applyToSeries && session.seriesId) {
+        const original = new Date(session.startAt)
+        const originalMinutes = original.getHours() * 60 + original.getMinutes()
+        const newMinutes = startAt.getHours() * 60 + startAt.getMinutes()
+        const timeShiftMs = (newMinutes - originalMinutes) * 60_000
+        const updatedCount = await updateFutureSeriesSessions(
+          session.seriesId,
+          session.startAt,
+          { timeShiftMs, modality: editModality, notes: editNotes },
+          session.id,
+        )
+        toast.show(`Sesión actualizada, y ${updatedCount} más de la serie`)
+      } else {
+        toast.show('Sesión actualizada')
+      }
       setIsEditing(false)
     } catch (error) {
       toast.show(getErrorMessage(error))
@@ -235,6 +277,18 @@ export function SessionDetailSheet() {
             />
           </section>
 
+          {session.seriesId && futureSeriesSessions.length > 0 && (
+            <label className={styles.seriesToggle}>
+              <input
+                type="checkbox"
+                checked={applyToSeries}
+                onChange={(e) => setApplyToSeries(e.target.checked)}
+              />
+              Aplicar la hora, modalidad y notas también a las {futureSeriesSessions.length} próximas
+              sesiones de esta serie
+            </label>
+          )}
+
           <div className={styles.actions}>
             <Button fullWidth onClick={handleSaveEdit} disabled={isSaving}>
               {isSaving ? 'Guardando…' : 'Guardar cambios'}
@@ -303,8 +357,13 @@ export function SessionDetailSheet() {
             Editar sesión
           </Button>
           <Button variant="danger" fullWidth onClick={handleDelete}>
-            Eliminar sesión
+            {session.seriesId && futureSeriesSessions.length > 0 ? 'Eliminar solo esta sesión' : 'Eliminar sesión'}
           </Button>
+          {session.seriesId && futureSeriesSessions.length > 0 && (
+            <Button variant="danger" fullWidth onClick={handleDeleteSeries}>
+              Eliminar esta y las {futureSeriesSessions.length} siguientes de la serie
+            </Button>
+          )}
         </div>
       </div>
 

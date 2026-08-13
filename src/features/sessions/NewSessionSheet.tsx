@@ -69,10 +69,10 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
   )
   const hourSlots = useMemo(() => getDayHourSlots(startAt, daySessions), [startAt, daySessions])
 
-  function selectHourSlot(hour: number) {
+  function selectHourSlot(hour: number, minute: number) {
     setStartAt((prev) => {
       const next = new Date(prev)
-      next.setHours(hour, 0, 0, 0)
+      next.setHours(hour, minute, 0, 0)
       return next
     })
   }
@@ -266,10 +266,11 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
           {hourSlots.length > 0 ? (
             <div className={styles.slotGrid}>
               {hourSlots.map((slot) => {
-                const isSelected = !slot.occupied && startAt.getHours() === slot.hour
+                const isSelected =
+                  !slot.occupied && startAt.getHours() === slot.hour && startAt.getMinutes() === slot.minute
                 return (
                   <button
-                    key={slot.hour}
+                    key={`${slot.hour}:${slot.minute}`}
                     type="button"
                     disabled={slot.occupied}
                     className={[
@@ -279,9 +280,9 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
                     ]
                       .filter(Boolean)
                       .join(' ')}
-                    onClick={() => selectHourSlot(slot.hour)}
+                    onClick={() => selectHourSlot(slot.hour, slot.minute)}
                   >
-                    {String(slot.hour).padStart(2, '0')}:00
+                    {String(slot.hour).padStart(2, '0')}:{String(slot.minute).padStart(2, '0')}
                   </button>
                 )
               })}

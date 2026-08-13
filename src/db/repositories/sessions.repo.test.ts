@@ -8,8 +8,12 @@ import { createPackage, getPackageBalance } from '@/db/repositories/packages.rep
 import {
   createSession,
   createWeeklySeries,
+  listFutureSeriesSessions,
   listSessionsForClient,
   markSessionPaid,
+  restoreSessions,
+  softDeleteFutureSeriesSessions,
+  updateFutureSeriesSessions,
   updateSessionAttendance,
   updateSessionDetails,
 } from '@/db/repositories/sessions.repo'
@@ -183,6 +187,82 @@ describe('createWeeklySeries', () => {
 
     const history = await listSessionsForClient(client.id)
     expect(history).toHaveLength(3)
+  })
+})
+
+describe('bulk series operations', () => {
+  async function createFourWeekSeries() {
+    const client = await createClient({ kind: 'individual', people: [{ name: 'Serie Semanal' }] })
+    const serviceType = await getIndividualServiceType()
+    const startAt = Date.UTC(2026, 7, 3, 19, 0) // a Monday, 19:00
+    const sessions = await createWeeklySeries(
+      { clientId: client.id, serviceTypeId: serviceType.id, startAt, modality: 'online' },
+      4,
+    )
+    return { client, serviceType, sessions }
+  }
+
+  describe('listFutureSeriesSessions', () => {
+    it('returns sessions from fromStartAt onward, excluding an explicitly given id', async () => {
+      const { sessions } = await createFourWeekSeries()
+      const [first, second, third, fourth] = sessions
+
+      const fromSecond = await listFutureSeriesSessions(first.seriesId!, second.startAt)
+      expect(fromSecond.map((s) => s.id)).toEqual([second.id, third.id, fourth.id])
+
+      const excludingFirst = await listFutureSeriesSessions(first.seriesId!, first.startAt, first.id)
+      expect(excludingFirst.map((s) => s.id)).toEqual([second.id, third.id, fourth.id])
+    })
+  })
+
+  describe('updateFutureSeriesSessions', () => {
+    it('shifts the time-of-day and updates modality/notes on future occurrences, keeping each on its own date', async () => {
+      const { sessions } = await createFourWeekSeries()
+      const [first, second, third, fourth] = sessions
+
+      const thirtyMinutesMs = 30 * 60_000
+      const updatedCount = await updateFutureSeriesSessions(
+        first.seriesId!,
+        first.startAt,
+        { timeShiftMs: thirtyMinutesMs, modality: 'in_person', notes: 'Cambio de horario' },
+        first.id,
+      )
+
+      expect(updatedCount).toBe(3)
+
+      const updatedSecond = await db.sessions.get(second.id)
+      expect(updatedSecond?.startAt).toBe(second.startAt + thirtyMinutesMs)
+      expect(updatedSecond?.modality).toBe('in_person')
+      expect(updatedSecond?.notes).toBe('Cambio de horario')
+
+      const updatedThird = await db.sessions.get(third.id)
+      expect(updatedThird?.startAt).toBe(third.startAt + thirtyMinutesMs)
+
+      const updatedFourth = await db.sessions.get(fourth.id)
+      expect(updatedFourth?.startAt).toBe(fourth.startAt + thirtyMinutesMs)
+
+      // The excluded session itself must be untouched by the bulk call.
+      const untouchedFirst = await db.sessions.get(first.id)
+      expect(untouchedFirst?.startAt).toBe(first.startAt)
+      expect(untouchedFirst?.modality).toBe('online')
+    })
+  })
+
+  describe('softDeleteFutureSeriesSessions + restoreSessions', () => {
+    it('soft-deletes this and every future occurrence together, and restores them as a batch', async () => {
+      const { sessions } = await createFourWeekSeries()
+      const [first, second, third, fourth] = sessions
+
+      const deletedIds = await softDeleteFutureSeriesSessions(first.seriesId!, second.startAt)
+      expect(deletedIds.sort()).toEqual([second.id, third.id, fourth.id].sort())
+
+      const stillActive = await listSessionsForClient(first.clientId)
+      expect(stillActive.map((s) => s.id)).toEqual([first.id])
+
+      await restoreSessions(deletedIds)
+      const restored = await listSessionsForClient(first.clientId)
+      expect(restored).toHaveLength(4)
+    })
   })
 })
 
