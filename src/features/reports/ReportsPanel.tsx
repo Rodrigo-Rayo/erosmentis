@@ -6,6 +6,7 @@ import { listAllExpenses, softDeleteExpense } from '@/db/repositories/expenses.r
 import { calculateMonthTotals } from '@/domain/totals'
 import {
   calculateAverageSessionCents,
+  calculateExpenseCategoryBreakdown,
   calculateExpensesCents,
   calculateServiceTypeBreakdown,
   calculateYearBreakdown,
@@ -80,6 +81,7 @@ export function ReportsPanel() {
   const serviceBreakdown = calculateServiceTypeBreakdown(periodSessions, serviceTypesById)
   const yearBreakdown = period === 'historic' ? calculateYearBreakdown(periodSessions) : []
   const expensesCents = calculateExpensesCents(periodExpenses)
+  const expenseCategoryBreakdown = calculateExpenseCategoryBreakdown(periodExpenses)
   const profitCents = totals.collectedCents - expensesCents
 
   async function handleDeleteExpense(id: string) {
@@ -204,8 +206,20 @@ export function ReportsPanel() {
 
         <p className={styles.expensesTotal}>{formatCents(expensesCents)}</p>
 
+        {expenseCategoryBreakdown.length > 0 && (
+          <div className={styles.categoryPills}>
+            {expenseCategoryBreakdown.map((item) => (
+              <div key={item.category} className={styles.categoryPill}>
+                <span className={styles.categoryPillLabel}>{item.label}</span>
+                <span className={styles.categoryPillAmount}>{formatCents(item.amountCents)}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
         {periodExpenses.length > 0 && (
           <div className={styles.breakdownList}>
+            <p className={styles.expensesDetailLabel}>Detalle</p>
             {periodExpenses
               .slice()
               .sort((a, b) => b.incurredAt - a.incurredAt)
