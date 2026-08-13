@@ -109,8 +109,8 @@ export function DayScreen() {
   async function handleConfirmPayment(method: PaymentMethod) {
     if (!payingSession) return
     try {
-      await markSessionPaid({ sessionId: payingSession.id, method })
-      toast.show('Cobro registrado')
+      const recorded = await markSessionPaid({ sessionId: payingSession.id, method })
+      toast.show(recorded ? 'Cobro registrado' : 'Esta sesión ya estaba cobrada')
     } catch (error) {
       toast.show(getErrorMessage(error))
     } finally {

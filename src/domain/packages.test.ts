@@ -53,6 +53,16 @@ describe('calculatePackageBalance', () => {
     expect(balance.remaining).toBe(3)
   })
 
+  it('burns a slot for a late cancellation explicitly marked as counting against the package', () => {
+    const pkg = makePackage({ id: 'pkg-1', totalSessions: 4 })
+    const sessions = [
+      makeSession({ packageId: 'pkg-1', attendance: 'cancelled_by_client', countsAgainstPackage: true }),
+    ]
+    const balance = calculatePackageBalance(pkg, sessions)
+    expect(balance.forfeited).toBe(1)
+    expect(balance.remaining).toBe(3)
+  })
+
   it('does not burn a slot for a no-show explicitly excluded from the package', () => {
     const pkg = makePackage({ id: 'pkg-1', totalSessions: 4 })
     const sessions = [

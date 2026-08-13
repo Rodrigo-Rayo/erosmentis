@@ -19,9 +19,14 @@ export function monthRange(monthStart: Date, timeZone = APP_TIMEZONE): DateRange
   const zoned = toZonedTime(monthStart, timeZone)
   const start = startOfMonth(zoned)
   const end = endOfMonth(zoned)
+  // Set the end-of-day time on the still-zoned Date before converting to a UTC instant —
+  // doing it after fromZonedTime() would call setHours() using the host system's timezone
+  // instead of `timeZone`, silently shifting the boundary by hours on any device not set to
+  // Europe/Madrid.
+  end.setHours(23, 59, 59, 999)
   return {
     start: fromZonedTime(start, timeZone).getTime(),
-    end: fromZonedTime(end, timeZone).setHours(23, 59, 59, 999),
+    end: fromZonedTime(end, timeZone).getTime(),
   }
 }
 
@@ -45,9 +50,10 @@ export function weekRange(
   const zoned = toZonedTime(day, timeZone)
   const start = startOfWeek(zoned, { weekStartsOn })
   const end = endOfWeek(zoned, { weekStartsOn })
+  end.setHours(23, 59, 59, 999)
   return {
     start: fromZonedTime(start, timeZone).getTime(),
-    end: fromZonedTime(end, timeZone).setHours(23, 59, 59, 999),
+    end: fromZonedTime(end, timeZone).getTime(),
   }
 }
 

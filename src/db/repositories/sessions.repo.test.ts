@@ -11,13 +11,15 @@ import {
   listFutureSeriesSessions,
   listSessionsForClient,
   markSessionPaid,
+  restoreSession,
   restoreSessions,
   softDeleteFutureSeriesSessions,
+  softDeleteSession,
   updateFutureSeriesSessions,
   updateSessionAttendance,
   updateSessionDetails,
 } from '@/db/repositories/sessions.repo'
-import { listPaymentsForClient } from '@/db/repositories/payments.repo'
+import { listPaymentsForClient, softDeletePayment } from '@/db/repositories/payments.repo'
 
 beforeEach(async () => {
   await db.delete()
@@ -47,7 +49,8 @@ describe('createSession + markSessionPaid', () => {
     expect(session.paymentStatus).toBe('pending')
     expect(session.priceCents).toBe(6000)
 
-    await markSessionPaid({ sessionId: session.id, method: 'bizum' })
+    const recorded = await markSessionPaid({ sessionId: session.id, method: 'bizum' })
+    expect(recorded).toBe(true)
 
     const updated = await db.sessions.get(session.id)
     expect(updated?.paymentStatus).toBe('paid')
@@ -56,6 +59,51 @@ describe('createSession + markSessionPaid', () => {
     expect(payments).toHaveLength(1)
     expect(payments[0].amountCents).toBe(6000)
     expect(payments[0].sessionId).toBe(session.id)
+  })
+
+  it('returns false and records nothing on a second call for an already-paid session', async () => {
+    const client = await createClient({ kind: 'individual', people: [{ name: 'Marta Ruiz' }] })
+    const serviceType = await getIndividualServiceType()
+
+    const session = await createSession({
+      clientId: client.id,
+      serviceTypeId: serviceType.id,
+      startAt: Date.now(),
+      modality: 'online',
+    })
+
+    await markSessionPaid({ sessionId: session.id, method: 'bizum' })
+    const secondAttempt = await markSessionPaid({ sessionId: session.id, method: 'cash' })
+
+    expect(secondAttempt).toBe(false)
+    const payments = await listPaymentsForClient(client.id)
+    expect(payments).toHaveLength(1)
+  })
+})
+
+describe('softDeleteSession + restoreSession payment cascade', () => {
+  it('does not resurrect a payment that was independently deleted before the session was deleted', async () => {
+    const client = await createClient({ kind: 'individual', people: [{ name: 'Pablo Ortiz' }] })
+    const serviceType = await getIndividualServiceType()
+
+    const session = await createSession({
+      clientId: client.id,
+      serviceTypeId: serviceType.id,
+      startAt: Date.now(),
+      modality: 'online',
+    })
+    await markSessionPaid({ sessionId: session.id, method: 'bizum' })
+
+    const [payment] = await db.payments.where('sessionId').equals(session.id).toArray()
+    await softDeletePayment(payment.id)
+
+    const paymentIds = await softDeleteSession(session.id)
+    expect(paymentIds).toEqual([])
+
+    await restoreSession(session.id, paymentIds)
+
+    const restoredPayment = await db.payments.get(payment.id)
+    expect(restoredPayment?.deletedAt).not.toBeNull()
   })
 })
 
@@ -282,13 +330,13 @@ describe('bulk series operations', () => {
       const { sessions } = await createFourWeekSeries()
       const [first, second, third, fourth] = sessions
 
-      const deletedIds = await softDeleteFutureSeriesSessions(first.seriesId!, second.startAt)
-      expect(deletedIds.sort()).toEqual([second.id, third.id, fourth.id].sort())
+      const { sessionIds, paymentIds } = await softDeleteFutureSeriesSessions(first.seriesId!, second.startAt)
+      expect(sessionIds.sort()).toEqual([second.id, third.id, fourth.id].sort())
 
       const stillActive = await listSessionsForClient(first.clientId)
       expect(stillActive.map((s) => s.id)).toEqual([first.id])
 
-      await restoreSessions(deletedIds)
+      await restoreSessions(sessionIds, paymentIds)
       const restored = await listSessionsForClient(first.clientId)
       expect(restored).toHaveLength(4)
     })

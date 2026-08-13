@@ -27,4 +27,10 @@ describe('encryptText / decryptText', () => {
     const tampered = { ...encrypted, ciphertext: `${encrypted.ciphertext.slice(0, -4)}abcd` }
     await expect(decryptText(tampered, 'password')).rejects.toThrow(WrongPasswordError)
   })
+
+  it('throws WrongPasswordError instead of an uncaught error when salt/iv are not valid base64', async () => {
+    const encrypted = await encryptText('secret data', 'password')
+    const corrupted = { ...encrypted, salt: 'not-valid-base64!!!' }
+    await expect(decryptText(corrupted, 'password')).rejects.toThrow(WrongPasswordError)
+  })
 })

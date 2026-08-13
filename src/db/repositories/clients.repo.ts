@@ -98,3 +98,12 @@ export async function unarchiveClient(id: string): Promise<void> {
 export async function softDeleteClient(id: string): Promise<void> {
   await db.clients.update(id, { deletedAt: Date.now() })
 }
+
+/** Earliest `createdAt` across every client ever added (including archived/deleted) — used as
+ * a stand-in for "when real usage began" by the backup reminder when no backup has been taken
+ * yet, so a fresh install with no data isn't nagged. */
+export async function getEarliestClientCreatedAt(): Promise<number | null> {
+  const clients = await db.clients.toArray()
+  if (clients.length === 0) return null
+  return Math.min(...clients.map((c) => c.createdAt))
+}

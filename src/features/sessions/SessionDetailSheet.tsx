@@ -103,10 +103,10 @@ export function SessionDetailSheet() {
   async function handleDelete() {
     if (!session) return
     try {
-      await softDeleteSession(session.id)
+      const paymentIds = await softDeleteSession(session.id)
       toast.show('Sesión eliminada', {
         label: 'Deshacer',
-        onClick: () => restoreSession(session.id),
+        onClick: () => restoreSession(session.id, paymentIds),
       })
       handleClose()
     } catch (error) {
@@ -117,10 +117,13 @@ export function SessionDetailSheet() {
   async function handleDeleteSeries() {
     if (!session?.seriesId) return
     try {
-      const deletedIds = await softDeleteFutureSeriesSessions(session.seriesId, session.startAt)
-      toast.show(`${deletedIds.length} sesiones eliminadas`, {
+      const { sessionIds, paymentIds } = await softDeleteFutureSeriesSessions(
+        session.seriesId,
+        session.startAt,
+      )
+      toast.show(`${sessionIds.length} sesiones eliminadas`, {
         label: 'Deshacer',
-        onClick: () => restoreSessions(deletedIds),
+        onClick: () => restoreSessions(sessionIds, paymentIds),
       })
       handleClose()
     } catch (error) {
@@ -131,8 +134,8 @@ export function SessionDetailSheet() {
   async function handlePaymentConfirm(method: PaymentMethod) {
     if (!session) return
     try {
-      await markSessionPaid({ sessionId: session.id, method })
-      toast.show('Cobro registrado')
+      const recorded = await markSessionPaid({ sessionId: session.id, method })
+      toast.show(recorded ? 'Cobro registrado' : 'Esta sesión ya estaba cobrada')
     } catch (error) {
       toast.show(getErrorMessage(error))
     } finally {

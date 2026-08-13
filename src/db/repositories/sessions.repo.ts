@@ -141,16 +141,17 @@ export interface MarkPaidInput {
   paidAt?: number
 }
 
-export async function markSessionPaid(input: MarkPaidInput): Promise<void> {
-  await db.transaction('rw', db.sessions, db.payments, async () => {
+/** Returns false (and records nothing) when the session was no longer pending — e.g. a
+ * double-tap or a slow write racing a second confirm — so the caller can avoid telling the
+ * user a payment was recorded when it wasn't. */
+export async function markSessionPaid(input: MarkPaidInput): Promise<boolean> {
+  return db.transaction('rw', db.sessions, db.payments, async () => {
     const session = await db.sessions.get(input.sessionId)
     if (!session) {
       throw new Error(`Session ${input.sessionId} not found`)
     }
-    // Guards against a double-tap or a slow write racing a second confirm creating two
-    // Payment rows for the same session, which would silently inflate collected totals.
     if (session.paymentStatus !== 'pending') {
-      return
+      return false
     }
     const now = Date.now()
     await db.payments.add({
@@ -168,6 +169,7 @@ export async function markSessionPaid(input: MarkPaidInput): Promise<void> {
       deletedAt: null,
     })
     await db.sessions.update(input.sessionId, { paymentStatus: 'paid' })
+    return true
   })
 }
 
@@ -224,24 +226,26 @@ export async function updateSessionDetails(
   await db.sessions.update(sessionId, changes)
 }
 
-/** Soft-deletes a session and its payment (if any) together, so client/month totals stay consistent. */
-export async function softDeleteSession(sessionId: string): Promise<void> {
-  await db.transaction('rw', db.sessions, db.payments, async () => {
+/** Soft-deletes a session and its payment (if any) together, so client/month totals stay
+ * consistent. Returns the ids of the payments this call actually deleted, so a later undo can
+ * restore exactly those — and not a payment that had already been deleted independently
+ * before this session was deleted, which would otherwise get silently resurrected. */
+export async function softDeleteSession(sessionId: string): Promise<string[]> {
+  return db.transaction('rw', db.sessions, db.payments, async () => {
     await db.sessions.update(sessionId, { deletedAt: Date.now() })
     const payments = await db.payments.where('sessionId').equals(sessionId).toArray()
-    await Promise.all(
-      payments
-        .filter((p) => p.deletedAt === null)
-        .map((p) => db.payments.update(p.id, { deletedAt: Date.now() })),
-    )
+    const active = payments.filter((p) => p.deletedAt === null)
+    await Promise.all(active.map((p) => db.payments.update(p.id, { deletedAt: Date.now() })))
+    return active.map((p) => p.id)
   })
 }
 
-export async function restoreSession(sessionId: string): Promise<void> {
+/** Undo for softDeleteSession — `paymentIds` should be exactly what that call returned, so only
+ * the payments it deleted come back, not ones deleted independently before or after. */
+export async function restoreSession(sessionId: string, paymentIds: readonly string[] = []): Promise<void> {
   await db.transaction('rw', db.sessions, db.payments, async () => {
     await db.sessions.update(sessionId, { deletedAt: null })
-    const payments = await db.payments.where('sessionId').equals(sessionId).toArray()
-    await Promise.all(payments.map((p) => db.payments.update(p.id, { deletedAt: null })))
+    await Promise.all(paymentIds.map((id) => db.payments.update(id, { deletedAt: null })))
   })
 }
 
@@ -288,35 +292,44 @@ export async function updateFutureSeriesSessions(
   return sessions.length
 }
 
+export interface SoftDeleteSeriesResult {
+  sessionIds: string[]
+  paymentIds: string[]
+}
+
 /** Soft-deletes this and every future occurrence of a series together (their payments too), for
- * when a patient stops needing a standing weekly slot. Returns the deleted session ids for undo. */
+ * when a patient stops needing a standing weekly slot. Returns the deleted session and payment
+ * ids for undo — only payments this call actually deleted, so a later restore can't resurrect
+ * one that was independently deleted before or after this cascade ran. */
 export async function softDeleteFutureSeriesSessions(
   seriesId: string,
   fromStartAt: number,
-): Promise<string[]> {
+): Promise<SoftDeleteSeriesResult> {
   const sessions = await listFutureSeriesSessions(seriesId, fromStartAt)
+  const deletedPaymentIds: string[] = []
   await db.transaction('rw', db.sessions, db.payments, async () => {
     for (const session of sessions) {
       await db.sessions.update(session.id, { deletedAt: Date.now() })
       const payments = await db.payments.where('sessionId').equals(session.id).toArray()
-      await Promise.all(
-        payments
-          .filter((p) => p.deletedAt === null)
-          .map((p) => db.payments.update(p.id, { deletedAt: Date.now() })),
-      )
+      const active = payments.filter((p) => p.deletedAt === null)
+      await Promise.all(active.map((p) => db.payments.update(p.id, { deletedAt: Date.now() })))
+      deletedPaymentIds.push(...active.map((p) => p.id))
     }
   })
-  return sessions.map((s) => s.id)
+  return { sessionIds: sessions.map((s) => s.id), paymentIds: deletedPaymentIds }
 }
 
 /** Restores a batch of soft-deleted sessions and their payments — the undo side of
- * softDeleteFutureSeriesSessions. */
-export async function restoreSessions(sessionIds: readonly string[]): Promise<void> {
+ * softDeleteFutureSeriesSessions. `paymentIds` should be exactly what that call returned. */
+export async function restoreSessions(
+  sessionIds: readonly string[],
+  paymentIds: readonly string[] = [],
+): Promise<void> {
   await db.transaction('rw', db.sessions, db.payments, async () => {
     for (const sessionId of sessionIds) {
       await db.sessions.update(sessionId, { deletedAt: null })
-      const payments = await db.payments.where('sessionId').equals(sessionId).toArray()
-      await Promise.all(payments.map((p) => db.payments.update(p.id, { deletedAt: null })))
     }
+    await Promise.all(paymentIds.map((id) => db.payments.update(id, { deletedAt: null })))
   })
 }
+

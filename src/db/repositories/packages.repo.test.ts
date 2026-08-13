@@ -10,6 +10,7 @@ import {
   getActivePackagesForClient,
   restorePackage,
 } from '@/db/repositories/packages.repo'
+import { createSession, updateSessionAttendance } from '@/db/repositories/sessions.repo'
 import { listPaymentsForClient } from '@/db/repositories/payments.repo'
 
 beforeEach(async () => {
@@ -35,16 +36,47 @@ describe('deletePackage / restorePackage', () => {
     expect(await getActivePackagesForClient(client.id)).toHaveLength(1)
     expect(await listPaymentsForClient(client.id)).toHaveLength(1)
 
-    await deletePackage(pkg.id)
+    const paymentIds = await deletePackage(pkg.id)
 
     expect(await getActivePackagesForClient(client.id)).toHaveLength(0)
     expect(await listPaymentsForClient(client.id)).toHaveLength(0)
 
-    await restorePackage(pkg.id)
+    await restorePackage(pkg.id, paymentIds)
 
     expect(await getActivePackagesForClient(client.id)).toHaveLength(1)
     const payments = await listPaymentsForClient(client.id)
     expect(payments).toHaveLength(1)
     expect(payments[0].amountCents).toBe(22000)
+  })
+})
+
+describe('getActivePackagesForClient', () => {
+  it('stops listing a package as active once every session in it has been attended, so a new one can be bought', async () => {
+    const client = await createClient({ kind: 'individual', people: [{ name: 'Iker Vidal' }] })
+    const serviceType = (await listServiceTypes())[0]
+
+    const pkg = await createPackage({
+      clientId: client.id,
+      serviceTypeId: serviceType.id,
+      label: 'Bono 1 sesión',
+      totalSessions: 1,
+      pricePaidCents: 6000,
+      paymentMethod: 'cash',
+    })
+
+    expect(await getActivePackagesForClient(client.id)).toHaveLength(1)
+
+    const session = await createSession({
+      clientId: client.id,
+      serviceTypeId: serviceType.id,
+      startAt: Date.now(),
+      modality: 'online',
+      usePackage: true,
+    })
+    expect(session.packageId).toBe(pkg.id)
+
+    await updateSessionAttendance(session.id, 'attended')
+
+    expect(await getActivePackagesForClient(client.id)).toHaveLength(0)
   })
 })

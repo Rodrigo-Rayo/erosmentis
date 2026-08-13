@@ -204,7 +204,7 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
         addReminderSafely(() => downloadSessionReminder(session, client, selectedServiceType ?? undefined))
         toast.show('Sesión guardada', {
           label: 'Deshacer',
-          onClick: () => softDeleteSession(session.id),
+          onClick: () => softDeleteSession(session.id).then(() => undefined),
         })
       }
       handleClose()

@@ -62,10 +62,14 @@ export class WrongPasswordError extends Error {
 }
 
 export async function decryptText(payload: EncryptedPayload, password: string): Promise<string> {
-  const salt = base64ToBuffer(payload.salt)
-  const iv = base64ToBuffer(payload.iv)
-  const key = await deriveKey(password, salt)
+  // One try/catch around decode *and* decrypt: a corrupted/tampered file can fail as early as
+  // atob() throwing InvalidCharacterError on non-base64 salt/iv/ciphertext, which must surface
+  // as the same "bad password or damaged file" message as an auth-tag failure, not an uncaught
+  // exception out of the restore flow.
   try {
+    const salt = base64ToBuffer(payload.salt)
+    const iv = base64ToBuffer(payload.iv)
+    const key = await deriveKey(password, salt)
     const plainBuffer = await crypto.subtle.decrypt(
       { name: 'AES-GCM', iv: iv as BufferSource },
       key,

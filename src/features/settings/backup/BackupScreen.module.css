@@ -41,6 +41,13 @@
   margin: 0;
 }
 
+.noteOverdue {
+  color: var(--color-pending);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
 .form {
   display: flex;
   flex-direction: column;

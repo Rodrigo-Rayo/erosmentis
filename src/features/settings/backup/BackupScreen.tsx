@@ -4,6 +4,8 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { Button } from '@/components/ui/Button'
 import { useToast } from '@/components/ui/Toast'
 import { getSettings } from '@/db/repositories/settings.repo'
+import { getEarliestClientCreatedAt } from '@/db/repositories/clients.repo'
+import { getBackupReminderState } from '@/domain/backupReminder'
 import { exportBackup } from './exportBackup'
 import {
   decryptBackupFile,
@@ -23,6 +25,7 @@ export function BackupScreen() {
   const toast = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
   const settings = useLiveQuery(() => getSettings(), [], null)
+  const earliestActivityAt = useLiveQuery(() => getEarliestClientCreatedAt(), [], null)
 
   const [exportStep, setExportStep] = useState<ExportStep>('idle')
   const [exportPassword, setExportPassword] = useState('')
@@ -111,6 +114,9 @@ export function BackupScreen() {
         settings.lastBackupAt,
       )
     : 'Nunca'
+  const isBackupOverdue = settings
+    ? getBackupReminderState(settings, earliestActivityAt).isOverdue
+    : false
 
   return (
     <div className={styles.wrapper}>
@@ -125,7 +131,10 @@ export function BackupScreen() {
 
       <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Exportar</h2>
-        <p className={styles.note}>Última copia: {lastBackupLabel}</p>
+        <p className={isBackupOverdue ? styles.noteOverdue : styles.note}>
+          Última copia: {lastBackupLabel}
+          {isBackupOverdue && ' · toca abajo para ponerte al día'}
+        </p>
 
         {exportStep === 'idle' && (
           <Button fullWidth onClick={() => setExportStep('password')}>
@@ -150,8 +159,8 @@ export function BackupScreen() {
               onChange={(e) => setExportPasswordConfirm(e.target.value)}
             />
             <p className={styles.warning}>
-              ⚠️ Si olvidas esta contraseña, nadie podrá recuperar el archivo. Guárdala en un
-              lugar seguro.
+              ⚠️ Si olvidas esta contraseña, nadie podrá recuperar el archivo. Guárdala en un lugar
+              seguro.
             </p>
             <Button fullWidth onClick={handleExport} disabled={!passwordsMatch || isExporting}>
               {isExporting ? 'Cifrando…' : 'Descargar copia cifrada'}
@@ -182,7 +191,11 @@ export function BackupScreen() {
               onChange={(e) => setImportPassword(e.target.value)}
             />
             {importError && <p className={styles.error}>{importError}</p>}
-            <Button fullWidth onClick={handleDecrypt} disabled={isImporting || importPassword === ''}>
+            <Button
+              fullWidth
+              onClick={handleDecrypt}
+              disabled={isImporting || importPassword === ''}
+            >
               {isImporting ? 'Comprobando…' : 'Leer copia'}
             </Button>
           </div>

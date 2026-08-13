@@ -1,8 +1,34 @@
-import { describe, expect, it } from 'vitest'
-import { generateWeeklyOccurrences } from './dates'
+/// <reference types="node" />
+import { afterEach, describe, expect, it } from 'vitest'
+import { generateWeeklyOccurrences, monthRange, weekRange } from './dates'
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000
 const START = Date.UTC(2026, 7, 4, 17, 0)
+
+describe('monthRange / weekRange timezone handling', () => {
+  const originalTZ = process.env.TZ
+
+  afterEach(() => {
+    process.env.TZ = originalTZ
+  })
+
+  it('monthRange produces Madrid-local bounds regardless of the host system timezone', () => {
+    process.env.TZ = 'America/New_York'
+    const range = monthRange(new Date(Date.UTC(2026, 7, 15)))
+    // August 2026 in Madrid is CEST (UTC+2): the month starts at 2026-07-31T22:00Z and ends
+    // at 2026-08-31T21:59:59.999Z. A host system in New York must not shift these bounds.
+    expect(new Date(range.start).toISOString()).toBe('2026-07-31T22:00:00.000Z')
+    expect(new Date(range.end).toISOString()).toBe('2026-08-31T21:59:59.999Z')
+  })
+
+  it('weekRange produces Madrid-local bounds regardless of the host system timezone', () => {
+    process.env.TZ = 'America/New_York'
+    const range = weekRange(new Date(Date.UTC(2026, 7, 13)), 1)
+    // Week of Mon 2026-08-10 to Sun 2026-08-16 in Madrid (CEST, UTC+2).
+    expect(new Date(range.start).toISOString()).toBe('2026-08-09T22:00:00.000Z')
+    expect(new Date(range.end).toISOString()).toBe('2026-08-16T21:59:59.999Z')
+  })
+})
 
 describe('generateWeeklyOccurrences', () => {
   it('defaults to one occurrence per week', () => {

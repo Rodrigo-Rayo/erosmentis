@@ -66,8 +66,8 @@ export function ClientDetailScreen() {
   async function handleConfirmPayment(method: PaymentMethod) {
     if (!payingSession) return
     try {
-      await markSessionPaid({ sessionId: payingSession.id, method })
-      toast.show('Cobro registrado')
+      const recorded = await markSessionPaid({ sessionId: payingSession.id, method })
+      toast.show(recorded ? 'Cobro registrado' : 'Esta sesión ya estaba cobrada')
     } catch (error) {
       toast.show(getErrorMessage(error))
     } finally {
@@ -77,10 +77,11 @@ export function ClientDetailScreen() {
 
   async function handleDeletePackage(packageId: string) {
     try {
-      await deletePackage(packageId)
+      const paymentIds = await deletePackage(packageId)
       toast.show('Bono eliminado', {
         label: 'Deshacer',
-        onClick: () => restorePackage(packageId).catch((error) => toast.show(getErrorMessage(error))),
+        onClick: () =>
+          restorePackage(packageId, paymentIds).catch((error) => toast.show(getErrorMessage(error))),
       })
     } catch (error) {
       toast.show(getErrorMessage(error))

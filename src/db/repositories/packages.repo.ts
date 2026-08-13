@@ -1,5 +1,10 @@
 import { db } from '@/db/database'
-import { calculatePackageBalance, canConsumePackageSlot, type PackageBalance } from '@/domain/packages'
+import {
+  calculatePackageBalance,
+  canConsumePackageSlot,
+  derivePackageStatus,
+  type PackageBalance,
+} from '@/domain/packages'
 import { splitEvenly } from '@/domain/money'
 import type { Package, PaymentMethod } from '@/domain/types'
 
@@ -55,30 +60,44 @@ export async function createPackage(input: CreatePackageInput): Promise<Package>
   return pkg
 }
 
-/** Soft-deletes a package and its up-front payment together, so totals stay consistent. */
-export async function deletePackage(id: string): Promise<void> {
-  await db.transaction('rw', db.packages, db.payments, async () => {
+/** Soft-deletes a package and its up-front payment together, so totals stay consistent. Returns
+ * the ids of the payments this call actually deleted, so a later undo restores exactly those —
+ * not a payment that had already been deleted independently before this package was deleted. */
+export async function deletePackage(id: string): Promise<string[]> {
+  return db.transaction('rw', db.packages, db.payments, async () => {
     await db.packages.update(id, { deletedAt: Date.now() })
     const payments = await db.payments.where('packageId').equals(id).toArray()
-    await Promise.all(
-      payments
-        .filter((p) => p.deletedAt === null)
-        .map((p) => db.payments.update(p.id, { deletedAt: Date.now() })),
-    )
+    const active = payments.filter((p) => p.deletedAt === null)
+    await Promise.all(active.map((p) => db.payments.update(p.id, { deletedAt: Date.now() })))
+    return active.map((p) => p.id)
   })
 }
 
-export async function restorePackage(id: string): Promise<void> {
+/** Undo for deletePackage — `paymentIds` should be exactly what that call returned. */
+export async function restorePackage(id: string, paymentIds: readonly string[] = []): Promise<void> {
   await db.transaction('rw', db.packages, db.payments, async () => {
     await db.packages.update(id, { deletedAt: null })
-    const payments = await db.payments.where('packageId').equals(id).toArray()
-    await Promise.all(payments.map((p) => db.payments.update(p.id, { deletedAt: null })))
+    await Promise.all(paymentIds.map((paymentId) => db.payments.update(paymentId, { deletedAt: null })))
   })
 }
 
+/** A package's `status` field is only authoritative for the manual states ('refunded',
+ * 'cancelled') — 'active'/'exhausted'/'expired' are derived live from its sessions here, so a
+ * package that's been fully consumed stops blocking "+ Añadir bono" for that client without
+ * needing every session mutation to remember to write back a new stored status. */
 export async function getActivePackagesForClient(clientId: string): Promise<Package[]> {
-  const packages = await db.packages.where('[clientId+status]').equals([clientId, 'active']).toArray()
-  return packages.filter((p) => p.deletedAt === null)
+  const packages = await db.packages.where('clientId').equals(clientId).toArray()
+  const now = Date.now()
+  const active: Package[] = []
+  for (const pkg of packages) {
+    if (pkg.deletedAt !== null) continue
+    const sessions = await db.sessions.where('packageId').equals(pkg.id).toArray()
+    const balance = calculatePackageBalance(pkg, sessions)
+    if (derivePackageStatus(pkg, balance, now) === 'active') {
+      active.push(pkg)
+    }
+  }
+  return active
 }
 
 export async function getPackageBalance(packageId: string): Promise<PackageBalance | null> {

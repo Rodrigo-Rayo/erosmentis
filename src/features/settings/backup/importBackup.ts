@@ -1,5 +1,10 @@
 import { db } from '@/db/database'
-import { backupEnvelopeSchema, backupPayloadSchema, type BackupPayload } from '@/domain/schemas'
+import {
+  backupEnvelopeSchema,
+  backupPayloadSchema,
+  validateBackupReferences,
+  type BackupPayload,
+} from '@/domain/schemas'
 import { decryptText } from './crypto'
 
 export class InvalidBackupFileError extends Error {
@@ -44,6 +49,9 @@ export async function decryptBackupFile(file: File, password: string): Promise<B
 
   const payload = backupPayloadSchema.safeParse(rawPayload)
   if (!payload.success) {
+    throw new InvalidBackupFileError()
+  }
+  if (validateBackupReferences(payload.data).length > 0) {
     throw new InvalidBackupFileError()
   }
   return payload.data

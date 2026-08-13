@@ -10,7 +10,9 @@ const DEFAULT_SETTINGS: AppSettings = {
   defaultModality: 'online',
   lowBalanceThreshold: 1,
   lastBackupAt: null,
-  backupReminderDays: 7,
+  // "cada dos meses" — reminds when it's been this many days since the last backup (or, if
+  // none was ever taken, since the oldest client record — see domain/backupReminder.ts).
+  backupReminderDays: 60,
   seedVersion: 0,
   onboardingCompletedAt: null,
 }

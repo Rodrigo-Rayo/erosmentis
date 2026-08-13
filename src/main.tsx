@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import { seedIfNeeded } from '@/db/seed'
+import { getErrorMessage } from '@/domain/errors'
 import { App } from './App'
 import { ErrorBoundary } from './app/ErrorBoundary'
 import { ErrorScreen } from './app/ErrorScreen'
@@ -10,8 +11,11 @@ import '@/styles/global.css'
 export const APP_ERROR_EVENT = 'app:error'
 
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('Unhandled promise rejection', event.reason)
-  const message = event.reason instanceof Error ? event.reason.message : 'Ha ocurrido un error inesperado'
+  // Log the message only, not the raw reason — a Dexie BulkError (e.g. from a failed backup
+  // import) carries the failing records in `.failures`, which can include patient names,
+  // phone numbers, and session notes that shouldn't land verbatim in the browser console.
+  const message = getErrorMessage(event.reason)
+  console.error('Unhandled promise rejection:', message)
   window.dispatchEvent(new CustomEvent(APP_ERROR_EVENT, { detail: message }))
 })
 
@@ -30,7 +34,7 @@ seedIfNeeded()
     )
   })
   .catch((error: unknown) => {
-    console.error('Failed to open the local database', error)
+    console.error('Failed to open the local database:', getErrorMessage(error))
     root.render(
       <StrictMode>
         <ErrorScreen

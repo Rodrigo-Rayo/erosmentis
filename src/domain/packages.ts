@@ -16,8 +16,11 @@ export function calculatePackageBalance(
 
   const used = pkgSessions.filter((s) => s.attendance === 'attended').length
   const reserved = pkgSessions.filter((s) => s.attendance === 'scheduled').length
+  // A no-show or a cancellation the therapist chose to still bill against the bono
+  // (countsAgainstPackage) consumes a slot exactly like an attended session does — a late
+  // cancellation is a common real-world policy, not just a no-show.
   const forfeited = pkgSessions.filter(
-    (s) => s.attendance === 'no_show' && s.countsAgainstPackage,
+    (s) => s.attendance !== 'scheduled' && s.attendance !== 'attended' && s.countsAgainstPackage,
   ).length
 
   const remaining = Math.max(0, pkg.totalSessions - used - forfeited)
