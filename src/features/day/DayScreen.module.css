@@ -1,0 +1,158 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.headerText {
+  min-width: 0;
+}
+
+.mark {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  flex-shrink: 0;
+  margin-top: 4px;
+  opacity: 0.85;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--color-accent);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-size: var(--text-sm);
+}
+
+.date {
+  font-size: var(--text-2xl);
+}
+
+.pendingBanner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--color-pending-soft);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4) var(--space-5);
+}
+
+.pendingTitle {
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.pendingSubtitle {
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}
+
+.pendingAmount {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  color: var(--color-pending);
+}
+
+.calendarSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.calendarNav,
+.weekNav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.monthLabel {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: var(--text-lg);
+  text-transform: capitalize;
+}
+
+.navButton {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-paper-raised);
+  box-shadow: inset 0 0 0 1px var(--color-border);
+  font-size: var(--text-lg);
+  color: var(--color-ink-muted);
+  cursor: pointer;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.weekSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+
+.weekLabel {
+  font-weight: 600;
+  font-size: var(--text-sm);
+  color: var(--color-ink-muted);
+}
+
+.weekEmpty {
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+}
+
+.weekList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.weekDayRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.weekDayLabel {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-ink);
+}
+
+.weekSlotChips {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.weekSlotChip {
+  border: none;
+  background: var(--color-paper-raised);
+  box-shadow: inset 0 0 0 1px var(--color-border);
+  border-radius: var(--radius-pill);
+  padding: var(--space-2) var(--space-4);
+  font-weight: 600;
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  color: var(--color-accent);
+  text-decoration: none;
+  cursor: pointer;
+}

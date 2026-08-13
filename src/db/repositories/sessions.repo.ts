@@ -14,6 +14,7 @@ export interface CreateSessionInput {
   modality: Modality
   notes?: string
   usePackage?: boolean
+  priceCents?: number
   paymentStatusOverride?: PaymentStatus
   seriesId?: string | null
 }
@@ -25,7 +26,7 @@ export async function createSession(input: CreateSessionInput): Promise<Session>
   }
 
   let packageId: string | null = null
-  let priceCents = resolveSessionPrice(serviceType)
+  let priceCents = input.priceCents ?? resolveSessionPrice(serviceType)
   let paymentStatus: PaymentStatus =
     input.paymentStatusOverride ?? (serviceType.isBillable ? 'pending' : 'free')
 
@@ -35,6 +36,8 @@ export async function createSession(input: CreateSessionInput): Promise<Session>
       throw new Error('No hay bono con sesiones disponibles para este paciente y servicio')
     }
     packageId = pkg.id
+    // A bono-covered session is always priced at the package's per-session value —
+    // a manually-typed price must never override that, or the package accounting drifts.
     priceCents = resolveSessionPrice(serviceType, pkg.perSessionValueCents)
     paymentStatus = 'package'
   }

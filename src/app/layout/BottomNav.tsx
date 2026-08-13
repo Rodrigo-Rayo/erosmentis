@@ -3,7 +3,7 @@ import { CalendarIcon, PeopleIcon, SlidersIcon, SunIcon } from '@/components/ico
 import styles from './BottomNav.module.css'
 
 const TABS = [
-  { to: '/', label: 'Hoy', Icon: SunIcon, end: true },
+  { to: '/', label: 'Día', Icon: SunIcon, end: true },
   { to: '/mes', label: 'Mes', Icon: CalendarIcon, end: false },
   { to: '/clientes', label: 'Pacientes', Icon: PeopleIcon, end: false },
   { to: '/ajustes', label: 'Ajustes', Icon: SlidersIcon, end: false },

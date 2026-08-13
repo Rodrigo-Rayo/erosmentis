@@ -1,7 +1,7 @@
 import { Routes, Route, useLocation, type Location } from 'react-router-dom'
 import { ToastProvider } from '@/components/ui/Toast'
 import { AppShell } from '@/app/layout/AppShell'
-import { TodayScreen } from '@/features/today/TodayScreen'
+import { DayScreen } from '@/features/day/DayScreen'
 import { MonthScreen } from '@/features/month/MonthScreen'
 import { ClientListScreen } from '@/features/clients/ClientListScreen'
 import { ClientDetailScreen } from '@/features/clients/ClientDetailScreen'
@@ -18,6 +18,7 @@ import { useTheme } from '@/hooks/useTheme'
 interface SheetNavigationState {
   backgroundLocation?: Location
   presetClientId?: string
+  presetStartAt?: number
 }
 
 export function App() {
@@ -34,7 +35,7 @@ export function App() {
           path="/"
           element={
             <AppShell>
-              <TodayScreen />
+              <DayScreen />
             </AppShell>
           }
         />
@@ -84,7 +85,7 @@ export function App() {
               path="/sesion/nueva"
               element={
                 <AppShell>
-                  <NewSessionSheet />
+                  <NewSessionSheet presetStartAt={navState?.presetStartAt} />
                 </AppShell>
               }
             />
@@ -126,7 +127,15 @@ export function App() {
 
       {backgroundLocation && (
         <Routes>
-          <Route path="/sesion/nueva" element={<NewSessionSheet presetClientId={navState?.presetClientId} />} />
+          <Route
+            path="/sesion/nueva"
+            element={
+              <NewSessionSheet
+                presetClientId={navState?.presetClientId}
+                presetStartAt={navState?.presetStartAt}
+              />
+            }
+          />
           <Route path="/sesion/:id" element={<SessionDetailSheet />} />
           <Route path="/clientes/nuevo" element={<NewClientSheet />} />
           <Route path="/clientes/:id/editar" element={<EditClientSheet />} />

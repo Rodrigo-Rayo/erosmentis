@@ -55,6 +55,50 @@ describe('createSession + markSessionPaid', () => {
   })
 })
 
+describe('createSession with a manual price override', () => {
+  it('keeps the price the user typed instead of the service type default', async () => {
+    const client = await createClient({ kind: 'individual', people: [{ name: 'Iván Costa' }] })
+    const serviceType = await getIndividualServiceType()
+
+    const session = await createSession({
+      clientId: client.id,
+      serviceTypeId: serviceType.id,
+      startAt: Date.now(),
+      modality: 'online',
+      priceCents: 4500,
+    })
+
+    expect(session.priceCents).toBe(4500)
+    const stored = await db.sessions.get(session.id)
+    expect(stored?.priceCents).toBe(4500)
+  })
+
+  it('ignores a manual price override when consuming a package, using the per-session value instead', async () => {
+    const client = await createClient({ kind: 'individual', people: [{ name: 'Elena Ferrer' }] })
+    const serviceType = await getIndividualServiceType()
+    await createPackage({
+      clientId: client.id,
+      serviceTypeId: serviceType.id,
+      label: 'Bono 4 sesiones',
+      totalSessions: 4,
+      pricePaidCents: 22000,
+      paymentMethod: 'cash',
+    })
+
+    const session = await createSession({
+      clientId: client.id,
+      serviceTypeId: serviceType.id,
+      startAt: Date.now(),
+      modality: 'online',
+      usePackage: true,
+      priceCents: 9999,
+    })
+
+    expect(session.priceCents).toBe(5500)
+    expect(session.paymentStatus).toBe('package')
+  })
+})
+
 describe('package consumption end to end', () => {
   it('consumes a package slot and prices the session at the per-session value', async () => {
     const client = await createClient({ kind: 'individual', people: [{ name: 'Marc Ruiz' }] })

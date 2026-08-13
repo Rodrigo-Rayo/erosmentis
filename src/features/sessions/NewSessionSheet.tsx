@@ -14,16 +14,19 @@ import {
   createSession,
   createWeeklySeries,
   listSessionsForClient,
+  listSessionsInRange,
   softDeleteSession,
 } from '@/db/repositories/sessions.repo'
 import { formatCents } from '@/domain/money'
 import { getErrorMessage } from '@/domain/errors'
-import { nextHalfHourBoundary, shiftDays } from '@/domain/dates'
+import { dayRange, nextHalfHourBoundary, shiftDays } from '@/domain/dates'
+import { getDayHourSlots } from '@/domain/schedule'
 import type { Client, Modality } from '@/domain/types'
 import styles from './NewSessionSheet.module.css'
 
 interface NewSessionSheetProps {
   presetClientId?: string
+  presetStartAt?: number
 }
 
 function formatDateTimeLabel(date: Date): string {
@@ -34,14 +37,16 @@ function formatDateTimeLabel(date: Date): string {
   return `${dayLabel}, ${timeLabel}`
 }
 
-export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
+export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionSheetProps) {
   const navigate = useNavigate()
   const location = useLocation()
   const toast = useToast()
 
   const [client, setClient] = useState<Client | null>(null)
   const [serviceTypeId, setServiceTypeId] = useState<string>('')
-  const [startAt, setStartAt] = useState<Date>(() => nextHalfHourBoundary())
+  const [startAt, setStartAt] = useState<Date>(() =>
+    presetStartAt !== undefined ? new Date(presetStartAt) : nextHalfHourBoundary(),
+  )
   const [modality, setModality] = useState<Modality>('online')
   const [usePackage, setUsePackage] = useState(false)
   const [customPriceCents, setCustomPriceCents] = useState<number | null>(null)
@@ -55,6 +60,22 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
   const [isSaving, setIsSaving] = useState(false)
 
   const serviceTypes = useLiveQuery(() => listServiceTypes(), [], [])
+
+  const selectedDayRange = useMemo(() => dayRange(startAt), [startAt])
+  const daySessions = useLiveQuery(
+    () => listSessionsInRange(selectedDayRange.start, selectedDayRange.end),
+    [selectedDayRange.start, selectedDayRange.end],
+    [],
+  )
+  const hourSlots = useMemo(() => getDayHourSlots(startAt, daySessions), [startAt, daySessions])
+
+  function selectHourSlot(hour: number) {
+    setStartAt((prev) => {
+      const next = new Date(prev)
+      next.setHours(hour, 0, 0, 0)
+      return next
+    })
+  }
 
   const consumablePackage = useLiveQuery(
     () => (client && serviceTypeId ? findConsumablePackage(client.id, serviceTypeId) : Promise.resolve(null)),
@@ -149,6 +170,7 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
             modality,
             notes,
             usePackage,
+            priceCents: customPriceCents ?? undefined,
           },
           repeatWeeks,
           repeatIntervalWeeks,
@@ -167,6 +189,7 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
           modality,
           notes,
           usePackage,
+          priceCents: customPriceCents ?? undefined,
         })
         addReminderSafely(() => downloadSessionReminder(session, client, selectedServiceType ?? undefined))
         toast.show('Sesión guardada', {
@@ -239,6 +262,35 @@ export function NewSessionSheet({ presetClientId }: NewSessionSheetProps) {
               if (!Number.isNaN(next.getTime())) setStartAt(next)
             }}
           />
+
+          {hourSlots.length > 0 ? (
+            <div className={styles.slotGrid}>
+              {hourSlots.map((slot) => {
+                const isSelected = !slot.occupied && startAt.getHours() === slot.hour
+                return (
+                  <button
+                    key={slot.hour}
+                    type="button"
+                    disabled={slot.occupied}
+                    className={[
+                      styles.slotButton,
+                      isSelected ? styles.slotSelected : '',
+                      slot.occupied ? styles.slotOccupied : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                    onClick={() => selectHourSlot(slot.hour)}
+                  >
+                    {String(slot.hour).padStart(2, '0')}:00
+                  </button>
+                )
+              })}
+            </div>
+          ) : (
+            <p className={styles.slotHint}>
+              Este día no tiene horario fijo — elige la hora manualmente arriba.
+            </p>
+          )}
         </section>
 
         <section className={styles.field}>
