@@ -12,11 +12,17 @@ import { useToast } from '@/components/ui/Toast'
 import { formatCents } from '@/domain/money'
 import { getErrorMessage } from '@/domain/errors'
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation'
+import { SlideFade } from '@/components/motion/SlideFade'
+import { Chip } from '@/components/ui/Chip'
+import { ReportsPanel } from '@/features/reports/ReportsPanel'
 import type { PaymentMethod, Session } from '@/domain/types'
 import styles from './MonthScreen.module.css'
 
+type SubTab = 'mes' | 'informes'
+
 export function MonthScreen() {
   const toast = useToast()
+  const [subTab, setSubTab] = useState<SubTab>('mes')
   const [monthOffset, setMonthOffset] = useState(0)
   const [showPendingOnly, setShowPendingOnly] = useState(false)
   const [payingSession, setPayingSession] = useState<Session | null>(null)
@@ -68,52 +74,69 @@ export function MonthScreen() {
   )
 
   return (
-    <div className={styles.wrapper} style={{ touchAction: 'pan-y' }} {...monthSwipe}>
-      <header className={styles.header}>
-        <button type="button" className={styles.navButton} onClick={() => handleMonthNav(-1)}>
-          ‹
-        </button>
-        <h1 className={styles.month}>{capitalize(monthLabel)}</h1>
-        <button type="button" className={styles.navButton} onClick={() => handleMonthNav(1)}>
-          ›
-        </button>
-      </header>
+    <div className={styles.wrapper}>
+      <div className={styles.subTabToggle}>
+        <Chip selected={subTab === 'mes'} tone="accent" onClick={() => setSubTab('mes')}>
+          Mes
+        </Chip>
+        <Chip selected={subTab === 'informes'} tone="accent" onClick={() => setSubTab('informes')}>
+          Informes
+        </Chip>
+      </div>
 
-      <section className={styles.totals}>
-        <button type="button" className={styles.totalItem} onClick={() => setShowPendingOnly(false)}>
-          <span className={styles.totalLabel}>Facturado</span>
-          <span className={styles.totalValue}>{formatCents(totals.billedCents)}</span>
-        </button>
-        <button type="button" className={styles.totalItem} onClick={() => setShowPendingOnly(false)}>
-          <span className={styles.totalLabel}>Cobrado</span>
-          <span className={styles.totalValue}>{formatCents(totals.collectedCents)}</span>
-        </button>
-        <button
-          type="button"
-          className={`${styles.totalItem} ${showPendingOnly ? styles.totalItemActive : ''}`}
-          onClick={() => setShowPendingOnly((v) => !v)}
-        >
-          <span className={styles.totalLabel}>Pendiente</span>
-          <span className={styles.totalValuePending}>{formatCents(totals.pendingCents)}</span>
-        </button>
-      </section>
+      {subTab === 'mes' ? (
+        <div style={{ touchAction: 'pan-y' }} {...monthSwipe}>
+          <header className={styles.header}>
+            <button type="button" className={styles.navButton} onClick={() => handleMonthNav(-1)}>
+              ‹
+            </button>
+            <h1 className={styles.month}>{capitalize(monthLabel)}</h1>
+            <button type="button" className={styles.navButton} onClick={() => handleMonthNav(1)}>
+              ›
+            </button>
+          </header>
 
-      <section className={styles.list}>
-        {visibleSessions.length === 0 ? (
-          <EmptyState
-            emoji={showPendingOnly ? '✨' : '🌿'}
-            title={showPendingOnly ? 'Nada pendiente de cobro' : 'Sin sesiones este mes'}
-          />
-        ) : (
-          <SessionDayList
-            sessions={visibleSessions}
-            clientsById={clientsById}
-            serviceTypesById={serviceTypesById}
-            onMarkPaid={setPayingSession}
-            order="asc"
-          />
-        )}
-      </section>
+          <SlideFade itemKey={monthOffset} className={styles.slideContent}>
+            <section className={styles.totals}>
+              <button type="button" className={styles.totalItem} onClick={() => setShowPendingOnly(false)}>
+                <span className={styles.totalLabel}>Facturado</span>
+                <span className={styles.totalValue}>{formatCents(totals.billedCents)}</span>
+              </button>
+              <button type="button" className={styles.totalItem} onClick={() => setShowPendingOnly(false)}>
+                <span className={styles.totalLabel}>Cobrado</span>
+                <span className={styles.totalValue}>{formatCents(totals.collectedCents)}</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.totalItem} ${showPendingOnly ? styles.totalItemActive : ''}`}
+                onClick={() => setShowPendingOnly((v) => !v)}
+              >
+                <span className={styles.totalLabel}>Pendiente</span>
+                <span className={styles.totalValuePending}>{formatCents(totals.pendingCents)}</span>
+              </button>
+            </section>
+
+            <section className={styles.list}>
+              {visibleSessions.length === 0 ? (
+                <EmptyState
+                  emoji={showPendingOnly ? '✨' : '🌿'}
+                  title={showPendingOnly ? 'Nada pendiente de cobro' : 'Sin sesiones este mes'}
+                />
+              ) : (
+                <SessionDayList
+                  sessions={visibleSessions}
+                  clientsById={clientsById}
+                  serviceTypesById={serviceTypesById}
+                  onMarkPaid={setPayingSession}
+                  order="asc"
+                />
+              )}
+            </section>
+          </SlideFade>
+        </div>
+      ) : (
+        <ReportsPanel />
+      )}
 
       {payingSession && (
         <MarkPaidSheet

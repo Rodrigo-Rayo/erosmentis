@@ -4,6 +4,17 @@
   gap: var(--space-5);
 }
 
+.slideContent {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.subTabToggle {
+  display: flex;
+  gap: var(--space-2);
+}
+
 .header {
   display: flex;
   align-items: center;

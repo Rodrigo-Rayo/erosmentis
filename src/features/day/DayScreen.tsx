@@ -13,6 +13,7 @@ import { Chip } from '@/components/ui/Chip'
 import { useToast } from '@/components/ui/Toast'
 import { getErrorMessage } from '@/domain/errors'
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation'
+import { SlideFade } from '@/components/motion/SlideFade'
 import type { PaymentMethod, Session } from '@/domain/types'
 import styles from './DayScreen.module.css'
 
@@ -203,33 +204,35 @@ export function DayScreen() {
               ›
             </button>
           </div>
-          {freeSlotsByDay.length === 0 ? (
-            <p className={styles.weekEmpty}>Sin huecos libres esta semana.</p>
-          ) : (
-            <div className={styles.weekList}>
-              {freeSlotsByDay.map(({ date, slots }) => (
-                <div key={date.toISOString()} className={styles.weekDayRow}>
-                  <span className={styles.weekDayLabel}>
-                    {capitalize(
-                      new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric' }).format(date),
-                    )}
-                  </span>
-                  <div className={styles.weekSlotChips}>
-                    {slots.map((slot) => (
-                      <Link
-                        key={`${slot.hour}:${slot.minute}`}
-                        to="/sesion/nueva"
-                        state={{ backgroundLocation: location, presetStartAt: slot.startAt }}
-                        className={styles.weekSlotChip}
-                      >
-                        {String(slot.hour).padStart(2, '0')}:{String(slot.minute).padStart(2, '0')}
-                      </Link>
-                    ))}
+          <SlideFade itemKey={weekOffset}>
+            {freeSlotsByDay.length === 0 ? (
+              <p className={styles.weekEmpty}>Sin huecos libres esta semana.</p>
+            ) : (
+              <div className={styles.weekList}>
+                {freeSlotsByDay.map(({ date, slots }) => (
+                  <div key={date.toISOString()} className={styles.weekDayRow}>
+                    <span className={styles.weekDayLabel}>
+                      {capitalize(
+                        new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric' }).format(date),
+                      )}
+                    </span>
+                    <div className={styles.weekSlotChips}>
+                      {slots.map((slot) => (
+                        <Link
+                          key={`${slot.hour}:${slot.minute}`}
+                          to="/sesion/nueva"
+                          state={{ backgroundLocation: location, presetStartAt: slot.startAt }}
+                          className={styles.weekSlotChip}
+                        >
+                          {String(slot.hour).padStart(2, '0')}:{String(slot.minute).padStart(2, '0')}
+                        </Link>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-          )}
+                ))}
+              </div>
+            )}
+          </SlideFade>
         </section>
       )}
 

@@ -16,12 +16,12 @@
 }
 
 .mark {
-  width: 26px;
-  height: 26px;
+  width: 42px;
+  height: 42px;
   object-fit: contain;
   flex-shrink: 0;
-  margin-top: 4px;
-  opacity: 0.85;
+  margin-top: 2px;
+  opacity: 0.9;
 }
 
 .eyebrow {

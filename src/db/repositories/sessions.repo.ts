@@ -115,6 +115,12 @@ export async function listSessionsInRange(start: number, end: number): Promise<S
   return sessions.filter((s) => s.deletedAt === null).sort((a, b) => a.startAt - b.startAt)
 }
 
+/** All active sessions across all time, oldest first — backs the "histórico" report period. */
+export async function listAllSessions(): Promise<Session[]> {
+  const sessions = await db.sessions.toArray()
+  return sessions.filter((s) => s.deletedAt === null).sort((a, b) => a.startAt - b.startAt)
+}
+
 export async function listSessionsForClient(clientId: string): Promise<Session[]> {
   const sessions = await db.sessions
     .where('[clientId+startAt]')
