@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom'
 import { useSelectedDay } from '@/app/SelectedDayContext'
 import { db } from '@/db/database'
 import { dayRange, monthRange, weekRange, shiftDays, capitalize } from '@/domain/dates'
-import { getWeekFreeSlots, startOfWeekMonday } from '@/domain/schedule'
+import { getDayHourSlots, getWeekFreeSlots, startOfWeekMonday } from '@/domain/schedule'
 import { listSessionsInRange, markSessionPaid } from '@/db/repositories/sessions.repo'
 import { SessionRow } from '@/components/list/SessionRow'
 import { MonthCalendarGrid } from '@/features/month/MonthCalendarGrid'
@@ -70,6 +70,11 @@ export function DayScreen() {
     [dayRangeValue.start, dayRangeValue.end],
     [],
   )
+  const daySlots = useMemo(
+    () => getDayHourSlots(selectedDay, daySessions),
+    [selectedDay, daySessions],
+  )
+  const freeDaySlots = useMemo(() => daySlots.filter((s) => !s.occupied), [daySlots])
 
   const weekCursor = useMemo(() => new Date(shiftDays(Date.now(), weekOffset * 7)), [weekOffset])
   const weekRangeValue = weekRange(weekCursor, 1)
@@ -184,25 +189,50 @@ export function DayScreen() {
             />
           </section>
 
-          <section className={styles.list}>
-            {daySessions.length === 0 ? (
-              <EmptyState
-                emoji="🌿"
-                title="Sin sesiones este día"
-                description="Toca el botón + para agendar la próxima."
-              />
-            ) : (
-              daySessions.map((session) => (
-                <SessionRow
-                  key={session.id}
-                  session={session}
-                  client={clientsById.get(session.clientId)}
-                  serviceType={serviceTypesById.get(session.serviceTypeId)}
-                  onMarkPaid={setPayingSession}
+          <SlideFade itemKey={dayRangeValue.start} className={styles.daySlideContent}>
+            <section className={styles.list}>
+              <h2 className={styles.sectionLabel}>Sesiones</h2>
+              {daySessions.length === 0 ? (
+                <EmptyState
+                  emoji="🌿"
+                  title="Sin sesiones este día"
+                  description="Toca el botón + para agendar la próxima."
                 />
-              ))
+              ) : (
+                daySessions.map((session) => (
+                  <SessionRow
+                    key={session.id}
+                    session={session}
+                    client={clientsById.get(session.clientId)}
+                    serviceType={serviceTypesById.get(session.serviceTypeId)}
+                    onMarkPaid={setPayingSession}
+                  />
+                ))
+              )}
+            </section>
+
+            {daySlots.length > 0 && (
+              <section className={styles.dayFreeSlots}>
+                <h2 className={styles.dayFreeSlotsLabel}>Horas libres</h2>
+                {freeDaySlots.length === 0 ? (
+                  <p className={styles.weekEmpty}>Sin huecos libres este día.</p>
+                ) : (
+                  <div className={styles.weekSlotChips}>
+                    {freeDaySlots.map((slot) => (
+                      <Link
+                        key={`${slot.hour}:${slot.minute}`}
+                        to="/sesion/nueva"
+                        state={{ backgroundLocation: location, presetStartAt: slot.startAt }}
+                        className={styles.daySlotChip}
+                      >
+                        {String(slot.hour).padStart(2, '0')}:{String(slot.minute).padStart(2, '0')}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </section>
             )}
-          </section>
+          </SlideFade>
         </>
       ) : (
         <section className={styles.weekSection} style={{ touchAction: 'pan-y' }} {...weekSwipe}>
