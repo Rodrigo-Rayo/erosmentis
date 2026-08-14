@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { Routes, Route, useLocation, type Location } from 'react-router-dom'
 import { ToastProvider } from '@/components/ui/Toast'
+import { SelectedDayProvider } from '@/app/SelectedDayContext'
 import { AppShell } from '@/app/layout/AppShell'
 import { DayScreen } from '@/features/day/DayScreen'
 import { BackupReminder } from '@/features/settings/backup/BackupReminder'
@@ -54,125 +55,127 @@ export function App() {
   const backgroundLocation = navState?.backgroundLocation
 
   return (
-    <ToastProvider>
-      <UpdatePrompt />
-      <BackupReminder />
-      <Suspense fallback={null}>
-        <Routes location={backgroundLocation ?? location}>
-          <Route
-            path="/"
-            element={
-              <AppShell>
-                <DayScreen />
-              </AppShell>
-            }
-          />
-          <Route
-            path="/mes"
-            element={
-              <AppShell>
-                <MonthScreen />
-              </AppShell>
-            }
-          />
-          <Route
-            path="/clientes"
-            element={
-              <AppShell>
-                <ClientListScreen />
-              </AppShell>
-            }
-          />
-          <Route
-            path="/clientes/:id"
-            element={
-              <AppShell>
-                <ClientDetailScreen />
-              </AppShell>
-            }
-          />
-          <Route
-            path="/ajustes"
-            element={
-              <AppShell>
-                <SettingsScreen />
-              </AppShell>
-            }
-          />
-          <Route
-            path="/ajustes/backup"
-            element={
-              <AppShell>
-                <BackupScreen />
-              </AppShell>
-            }
-          />
-          {!backgroundLocation && (
-            <>
+    <SelectedDayProvider>
+      <ToastProvider>
+        <UpdatePrompt />
+        <BackupReminder />
+        <Suspense fallback={null}>
+          <Routes location={backgroundLocation ?? location}>
+            <Route
+              path="/"
+              element={
+                <AppShell>
+                  <DayScreen />
+                </AppShell>
+              }
+            />
+            <Route
+              path="/mes"
+              element={
+                <AppShell>
+                  <MonthScreen />
+                </AppShell>
+              }
+            />
+            <Route
+              path="/clientes"
+              element={
+                <AppShell>
+                  <ClientListScreen />
+                </AppShell>
+              }
+            />
+            <Route
+              path="/clientes/:id"
+              element={
+                <AppShell>
+                  <ClientDetailScreen />
+                </AppShell>
+              }
+            />
+            <Route
+              path="/ajustes"
+              element={
+                <AppShell>
+                  <SettingsScreen />
+                </AppShell>
+              }
+            />
+            <Route
+              path="/ajustes/backup"
+              element={
+                <AppShell>
+                  <BackupScreen />
+                </AppShell>
+              }
+            />
+            {!backgroundLocation && (
+              <>
+                <Route
+                  path="/sesion/nueva"
+                  element={
+                    <AppShell>
+                      <NewSessionSheet presetStartAt={navState?.presetStartAt} />
+                    </AppShell>
+                  }
+                />
+                <Route
+                  path="/sesion/:id"
+                  element={
+                    <AppShell>
+                      <SessionDetailSheet />
+                    </AppShell>
+                  }
+                />
+                <Route
+                  path="/clientes/nuevo"
+                  element={
+                    <AppShell>
+                      <NewClientSheet />
+                    </AppShell>
+                  }
+                />
+                <Route
+                  path="/clientes/:id/editar"
+                  element={
+                    <AppShell>
+                      <EditClientSheet />
+                    </AppShell>
+                  }
+                />
+                <Route
+                  path="/clientes/:clientId/bono/nuevo"
+                  element={
+                    <AppShell>
+                      <NewPackageSheet />
+                    </AppShell>
+                  }
+                />
+              </>
+            )}
+          </Routes>
+        </Suspense>
+
+        {backgroundLocation && (
+          <Suspense fallback={null}>
+            <Routes>
               <Route
                 path="/sesion/nueva"
                 element={
-                  <AppShell>
-                    <NewSessionSheet presetStartAt={navState?.presetStartAt} />
-                  </AppShell>
+                  <NewSessionSheet
+                    presetClientId={navState?.presetClientId}
+                    presetStartAt={navState?.presetStartAt}
+                  />
                 }
               />
-              <Route
-                path="/sesion/:id"
-                element={
-                  <AppShell>
-                    <SessionDetailSheet />
-                  </AppShell>
-                }
-              />
-              <Route
-                path="/clientes/nuevo"
-                element={
-                  <AppShell>
-                    <NewClientSheet />
-                  </AppShell>
-                }
-              />
-              <Route
-                path="/clientes/:id/editar"
-                element={
-                  <AppShell>
-                    <EditClientSheet />
-                  </AppShell>
-                }
-              />
-              <Route
-                path="/clientes/:clientId/bono/nuevo"
-                element={
-                  <AppShell>
-                    <NewPackageSheet />
-                  </AppShell>
-                }
-              />
-            </>
-          )}
-        </Routes>
-      </Suspense>
-
-      {backgroundLocation && (
-        <Suspense fallback={null}>
-          <Routes>
-            <Route
-              path="/sesion/nueva"
-              element={
-                <NewSessionSheet
-                  presetClientId={navState?.presetClientId}
-                  presetStartAt={navState?.presetStartAt}
-                />
-              }
-            />
-            <Route path="/sesion/:id" element={<SessionDetailSheet />} />
-            <Route path="/clientes/nuevo" element={<NewClientSheet />} />
-            <Route path="/clientes/:id/editar" element={<EditClientSheet />} />
-            <Route path="/clientes/:clientId/bono/nuevo" element={<NewPackageSheet />} />
-          </Routes>
-        </Suspense>
-      )}
-    </ToastProvider>
+              <Route path="/sesion/:id" element={<SessionDetailSheet />} />
+              <Route path="/clientes/nuevo" element={<NewClientSheet />} />
+              <Route path="/clientes/:id/editar" element={<EditClientSheet />} />
+              <Route path="/clientes/:clientId/bono/nuevo" element={<NewPackageSheet />} />
+            </Routes>
+          </Suspense>
+        )}
+      </ToastProvider>
+    </SelectedDayProvider>
   )
 }

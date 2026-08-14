@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { Link, useLocation } from 'react-router-dom'
+import { useSelectedDay } from '@/app/SelectedDayContext'
 import { db } from '@/db/database'
 import { dayRange, monthRange, weekRange, shiftDays, capitalize } from '@/domain/dates'
 import { getWeekFreeSlots, startOfWeekMonday } from '@/domain/schedule'
@@ -23,10 +24,15 @@ function formatWeekRangeLabel(monday: Date): string {
   const sunday = new Date(monday)
   sunday.setDate(sunday.getDate() + 6)
 
-  const sameMonth = monday.getMonth() === sunday.getMonth() && monday.getFullYear() === sunday.getFullYear()
+  const sameMonth =
+    monday.getMonth() === sunday.getMonth() && monday.getFullYear() === sunday.getFullYear()
   const dayOnly = new Intl.DateTimeFormat('es-ES', { day: 'numeric' })
   const dayMonth = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short' })
-  const dayMonthYear = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'short', year: 'numeric' })
+  const dayMonthYear = new Intl.DateTimeFormat('es-ES', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
 
   if (sameMonth) {
     return `${dayOnly.format(monday)}–${dayMonth.format(sunday)}`
@@ -40,7 +46,7 @@ export function DayScreen() {
   const toast = useToast()
   const location = useLocation()
   const [payingSession, setPayingSession] = useState<Session | null>(null)
-  const [selectedDay, setSelectedDay] = useState<Date>(() => new Date())
+  const { selectedDay, setSelectedDay } = useSelectedDay()
   const [monthOffset, setMonthOffset] = useState(0)
   const [weekOffset, setWeekOffset] = useState(0)
   const [subTab, setSubTab] = useState<SubTab>('dia')
@@ -137,14 +143,22 @@ export function DayScreen() {
         <Chip selected={subTab === 'dia'} tone="accent" onClick={() => setSubTab('dia')}>
           Día
         </Chip>
-        <Chip selected={subTab === 'disponibilidad'} tone="accent" onClick={() => setSubTab('disponibilidad')}>
+        <Chip
+          selected={subTab === 'disponibilidad'}
+          tone="accent"
+          onClick={() => setSubTab('disponibilidad')}
+        >
           Disponibilidad
         </Chip>
       </div>
 
       {subTab === 'dia' ? (
         <>
-          <section className={styles.calendarSection} style={{ touchAction: 'pan-y' }} {...monthSwipe}>
+          <section
+            className={styles.calendarSection}
+            style={{ touchAction: 'pan-y' }}
+            {...monthSwipe}
+          >
             <div className={styles.calendarNav}>
               <button
                 type="button"
@@ -193,14 +207,22 @@ export function DayScreen() {
       ) : (
         <section className={styles.weekSection} style={{ touchAction: 'pan-y' }} {...weekSwipe}>
           <div className={styles.weekNav}>
-            <button type="button" className={styles.navButton} onClick={() => setWeekOffset((v) => v - 1)}>
+            <button
+              type="button"
+              className={styles.navButton}
+              onClick={() => setWeekOffset((v) => v - 1)}
+            >
               ‹
             </button>
             <span className={styles.weekLabelGroup}>
               <span className={styles.weekLabel}>Horas libres esta semana</span>
               <span className={styles.weekRange}>{weekRangeLabel}</span>
             </span>
-            <button type="button" className={styles.navButton} onClick={() => setWeekOffset((v) => v + 1)}>
+            <button
+              type="button"
+              className={styles.navButton}
+              onClick={() => setWeekOffset((v) => v + 1)}
+            >
               ›
             </button>
           </div>
@@ -213,7 +235,10 @@ export function DayScreen() {
                   <div key={date.toISOString()} className={styles.weekDayRow}>
                     <span className={styles.weekDayLabel}>
                       {capitalize(
-                        new Intl.DateTimeFormat('es-ES', { weekday: 'long', day: 'numeric' }).format(date),
+                        new Intl.DateTimeFormat('es-ES', {
+                          weekday: 'long',
+                          day: 'numeric',
+                        }).format(date),
                       )}
                     </span>
                     <div className={styles.weekSlotChips}>
@@ -224,7 +249,8 @@ export function DayScreen() {
                           state={{ backgroundLocation: location, presetStartAt: slot.startAt }}
                           className={styles.weekSlotChip}
                         >
-                          {String(slot.hour).padStart(2, '0')}:{String(slot.minute).padStart(2, '0')}
+                          {String(slot.hour).padStart(2, '0')}:
+                          {String(slot.minute).padStart(2, '0')}
                         </Link>
                       ))}
                     </div>

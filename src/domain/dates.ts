@@ -1,11 +1,4 @@
-import {
-  addDays,
-  addWeeks,
-  endOfMonth,
-  startOfMonth,
-  startOfWeek,
-  endOfWeek,
-} from 'date-fns'
+import { addDays, addWeeks, endOfMonth, startOfMonth, startOfWeek, endOfWeek } from 'date-fns'
 import { fromZonedTime, toZonedTime } from 'date-fns-tz'
 
 export const APP_TIMEZONE = 'Europe/Madrid'
@@ -42,11 +35,7 @@ export function dayRange(day: Date, timeZone = APP_TIMEZONE): DateRange {
   }
 }
 
-export function weekRange(
-  day: Date,
-  weekStartsOn: 0 | 1 = 1,
-  timeZone = APP_TIMEZONE,
-): DateRange {
+export function weekRange(day: Date, weekStartsOn: 0 | 1 = 1, timeZone = APP_TIMEZONE): DateRange {
   const zoned = toZonedTime(day, timeZone)
   const start = startOfWeek(zoned, { weekStartsOn })
   const end = endOfWeek(zoned, { weekStartsOn })
@@ -73,7 +62,20 @@ export function nextHalfHourBoundary(from = new Date()): Date {
   return result
 }
 
-export function generateWeeklyOccurrences(startAt: number, count: number, intervalWeeks = 1): number[] {
+/** Same "round up to the next half hour" default used when creating a session today, but
+ * anchored to a different calendar day — e.g. a day picked on the month calendar — by carrying
+ * over the current time-of-day onto that date first. */
+export function nextHalfHourBoundaryOnDay(day: Date, from = new Date()): Date {
+  const combined = new Date(day)
+  combined.setHours(from.getHours(), from.getMinutes(), from.getSeconds(), from.getMilliseconds())
+  return nextHalfHourBoundary(combined)
+}
+
+export function generateWeeklyOccurrences(
+  startAt: number,
+  count: number,
+  intervalWeeks = 1,
+): number[] {
   if (count <= 0) {
     return []
   }

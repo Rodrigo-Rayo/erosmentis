@@ -1,6 +1,11 @@
 /// <reference types="node" />
 import { afterEach, describe, expect, it } from 'vitest'
-import { generateWeeklyOccurrences, monthRange, weekRange } from './dates'
+import {
+  generateWeeklyOccurrences,
+  monthRange,
+  nextHalfHourBoundaryOnDay,
+  weekRange,
+} from './dates'
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000
 const START = Date.UTC(2026, 7, 4, 17, 0)
@@ -27,6 +32,27 @@ describe('monthRange / weekRange timezone handling', () => {
     // Week of Mon 2026-08-10 to Sun 2026-08-16 in Madrid (CEST, UTC+2).
     expect(new Date(range.start).toISOString()).toBe('2026-08-09T22:00:00.000Z')
     expect(new Date(range.end).toISOString()).toBe('2026-08-16T21:59:59.999Z')
+  })
+})
+
+describe('nextHalfHourBoundaryOnDay', () => {
+  it('carries the current time-of-day over onto the given day, then rounds up to the next half hour', () => {
+    const pickedDay = new Date(2026, 7, 20) // midnight, no time-of-day of its own
+    const now = new Date(2026, 7, 14, 14, 37)
+    const result = nextHalfHourBoundaryOnDay(pickedDay, now)
+    expect(result.getFullYear()).toBe(2026)
+    expect(result.getMonth()).toBe(7)
+    expect(result.getDate()).toBe(20)
+    expect(result.getHours()).toBe(15)
+    expect(result.getMinutes()).toBe(0)
+  })
+
+  it('keeps an already-on-the-half-hour time as-is', () => {
+    const pickedDay = new Date(2026, 7, 20)
+    const now = new Date(2026, 7, 14, 9, 30, 0, 0)
+    const result = nextHalfHourBoundaryOnDay(pickedDay, now)
+    expect(result.getHours()).toBe(9)
+    expect(result.getMinutes()).toBe(30)
   })
 })
 
