@@ -24,3 +24,18 @@
   font-size: var(--text-base);
   min-height: 52px;
 }
+
+.duplicateWarning {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-pending-soft);
+  border-radius: var(--radius-md);
+}
+
+.duplicateWarningText {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-ink);
+}

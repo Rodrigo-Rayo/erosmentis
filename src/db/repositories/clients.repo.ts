@@ -1,5 +1,5 @@
 import { db } from '@/db/database'
-import { buildSearchName, matchesSearch } from '@/domain/search'
+import { buildSearchName, matchesSearch, normalizeSearchText } from '@/domain/search'
 import type { Client, ClientKind, Modality, Person } from '@/domain/types'
 
 export interface CreateClientInput {
@@ -79,6 +79,16 @@ export async function listActiveClients(): Promise<Client[]> {
 
 export interface ClientSearchResult extends Client {
   isRecent: boolean
+}
+
+/** Finds an existing active client whose display name matches exactly (accent/case-insensitive) —
+ * used to warn before creating what may be an accidental duplicate, e.g. two patients both
+ * named "Luis" with no last name entered. */
+export async function findClientByDisplayName(displayName: string): Promise<Client | null> {
+  const normalized = normalizeSearchText(displayName)
+  if (normalized === '') return null
+  const clients = await listActiveClients()
+  return clients.find((c) => normalizeSearchText(c.displayName) === normalized) ?? null
 }
 
 export async function searchClients(
