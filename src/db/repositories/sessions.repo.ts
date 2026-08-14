@@ -121,6 +121,16 @@ export async function listAllSessions(): Promise<Session[]> {
   return sessions.filter((s) => s.deletedAt === null).sort((a, b) => a.startAt - b.startAt)
 }
 
+/** Still-scheduled sessions from `fromStartAt` onward, oldest first — backs the "próxima
+ * sesión" hint on the patient list. Excludes cancelled sessions even if their date is in the
+ * future, since those aren't really "next" appointments anymore. */
+export async function listUpcomingSessions(fromStartAt: number): Promise<Session[]> {
+  const sessions = await db.sessions.where('startAt').aboveOrEqual(fromStartAt).toArray()
+  return sessions
+    .filter((s) => s.deletedAt === null && s.attendance === 'scheduled')
+    .sort((a, b) => a.startAt - b.startAt)
+}
+
 export async function listSessionsForClient(clientId: string): Promise<Session[]> {
   const sessions = await db.sessions
     .where('[clientId+startAt]')
@@ -242,7 +252,10 @@ export async function softDeleteSession(sessionId: string): Promise<string[]> {
 
 /** Undo for softDeleteSession — `paymentIds` should be exactly what that call returned, so only
  * the payments it deleted come back, not ones deleted independently before or after. */
-export async function restoreSession(sessionId: string, paymentIds: readonly string[] = []): Promise<void> {
+export async function restoreSession(
+  sessionId: string,
+  paymentIds: readonly string[] = [],
+): Promise<void> {
   await db.transaction('rw', db.sessions, db.payments, async () => {
     await db.sessions.update(sessionId, { deletedAt: null })
     await Promise.all(paymentIds.map((id) => db.payments.update(id, { deletedAt: null })))
@@ -332,4 +345,3 @@ export async function restoreSessions(
     await Promise.all(paymentIds.map((id) => db.payments.update(id, { deletedAt: null })))
   })
 }
-

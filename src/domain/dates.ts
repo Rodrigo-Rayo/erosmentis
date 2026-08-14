@@ -98,3 +98,17 @@ export function shiftDays(timestamp: number, days: number): number {
 export function capitalize(text: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1)
 }
+
+/** Short "mié, 18 ago, 19:00" style label used wherever a compact date+time needs to fit on
+ * one line — session pickers, upcoming-session hints, etc. */
+export function formatDateTimeLabel(date: Date): string {
+  const dayLabel = new Intl.DateTimeFormat('es-ES', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
+  }).format(date)
+  const timeLabel = new Intl.DateTimeFormat('es-ES', { hour: '2-digit', minute: '2-digit' }).format(
+    date,
+  )
+  return `${dayLabel}, ${timeLabel}`
+}

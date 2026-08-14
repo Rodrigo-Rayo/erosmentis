@@ -21,7 +21,7 @@ import {
 } from '@/db/repositories/sessions.repo'
 import { formatCents } from '@/domain/money'
 import { getErrorMessage } from '@/domain/errors'
-import { dayRange, nextHalfHourBoundary, shiftDays } from '@/domain/dates'
+import { dayRange, formatDateTimeLabel, nextHalfHourBoundary, shiftDays } from '@/domain/dates'
 import { getDayHourSlots } from '@/domain/schedule'
 import type { Client, Modality } from '@/domain/types'
 import styles from './NewSessionSheet.module.css'
@@ -29,14 +29,6 @@ import styles from './NewSessionSheet.module.css'
 interface NewSessionSheetProps {
   presetClientId?: string
   presetStartAt?: number
-}
-
-function formatDateTimeLabel(date: Date): string {
-  const dayLabel = new Intl.DateTimeFormat('es-ES', { weekday: 'short', day: 'numeric', month: 'short' }).format(
-    date,
-  )
-  const timeLabel = new Intl.DateTimeFormat('es-ES', { hour: '2-digit', minute: '2-digit' }).format(date)
-  return `${dayLabel}, ${timeLabel}`
 }
 
 export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionSheetProps) {
@@ -80,7 +72,10 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
   }
 
   const consumablePackage = useLiveQuery(
-    () => (client && serviceTypeId ? findConsumablePackage(client.id, serviceTypeId) : Promise.resolve(null)),
+    () =>
+      client && serviceTypeId
+        ? findConsumablePackage(client.id, serviceTypeId)
+        : Promise.resolve(null),
     [client?.id, serviceTypeId],
     null,
   )
@@ -177,7 +172,9 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
           repeatWeeks,
           repeatIntervalWeeks,
         )
-        addReminderSafely(() => downloadSessionsReminder(sessions, client, selectedServiceType ?? undefined))
+        addReminderSafely(() =>
+          downloadSessionsReminder(sessions, client, selectedServiceType ?? undefined),
+        )
         const skippedMessage =
           skippedStartAts.length > 0
             ? `, ${skippedStartAts.length} omitida${skippedStartAts.length > 1 ? 's' : ''} por coincidir con otra sesión`
@@ -201,7 +198,9 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
           usePackage,
           priceCents: customPriceCents ?? undefined,
         })
-        addReminderSafely(() => downloadSessionReminder(session, client, selectedServiceType ?? undefined))
+        addReminderSafely(() =>
+          downloadSessionReminder(session, client, selectedServiceType ?? undefined),
+        )
         toast.show('Sesión guardada', {
           label: 'Deshacer',
           onClick: () => softDeleteSession(session.id).then(() => undefined),
@@ -249,12 +248,16 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
         <section className={styles.field}>
           <label className={styles.label}>Cuándo</label>
           <div className={styles.chipRow}>
-            <Chip onClick={() => setStartAt(new Date(shiftDays(startAt.getTime(), -1)))}>‹ día</Chip>
+            <Chip onClick={() => setStartAt(new Date(shiftDays(startAt.getTime(), -1)))}>
+              ‹ día
+            </Chip>
             <button
               type="button"
               className={styles.dateButton}
               onClick={() => {
-                const input = document.getElementById('session-datetime-input') as HTMLInputElement | null
+                const input = document.getElementById(
+                  'session-datetime-input',
+                ) as HTMLInputElement | null
                 input?.showPicker?.() ?? input?.focus()
               }}
             >
@@ -277,7 +280,9 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
             <div className={styles.slotGrid}>
               {hourSlots.map((slot) => {
                 const isSelected =
-                  !slot.occupied && startAt.getHours() === slot.hour && startAt.getMinutes() === slot.minute
+                  !slot.occupied &&
+                  startAt.getHours() === slot.hour &&
+                  startAt.getMinutes() === slot.minute
                 return (
                   <button
                     key={`${slot.hour}:${slot.minute}`}
@@ -325,7 +330,9 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
                 value={(effectivePriceCents / 100).toString()}
                 onChange={(e) => {
                   const value = Number.parseFloat(e.target.value)
-                  setCustomPriceCents(Number.isNaN(value) ? 0 : Math.max(0, Math.round(value * 100)))
+                  setCustomPriceCents(
+                    Number.isNaN(value) ? 0 : Math.max(0, Math.round(value * 100)),
+                  )
                 }}
               />
               <span className={styles.priceHint}>{formatCents(effectivePriceCents)}</span>
@@ -342,7 +349,11 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
             <section className={styles.field}>
               <label className={styles.label}>Modalidad</label>
               <div className={styles.chipRow}>
-                <Chip selected={modality === 'online'} tone="accent" onClick={() => setModality('online')}>
+                <Chip
+                  selected={modality === 'online'}
+                  tone="accent"
+                  onClick={() => setModality('online')}
+                >
                   <MonitorIcon className={styles.chipIcon} aria-hidden="true" />
                   <span>Online</span>
                 </Chip>
@@ -369,16 +380,32 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
               {repeatWeekly && (
                 <>
                   <div className={styles.chipRow}>
-                    <Chip selected={repeatIntervalWeeks === 1} tone="accent" onClick={() => setRepeatIntervalWeeks(1)}>
+                    <Chip
+                      selected={repeatIntervalWeeks === 1}
+                      tone="accent"
+                      onClick={() => setRepeatIntervalWeeks(1)}
+                    >
                       Cada semana
                     </Chip>
-                    <Chip selected={repeatIntervalWeeks === 2} tone="accent" onClick={() => setRepeatIntervalWeeks(2)}>
+                    <Chip
+                      selected={repeatIntervalWeeks === 2}
+                      tone="accent"
+                      onClick={() => setRepeatIntervalWeeks(2)}
+                    >
                       Cada 2 semanas
                     </Chip>
-                    <Chip selected={repeatIntervalWeeks === 3} tone="accent" onClick={() => setRepeatIntervalWeeks(3)}>
+                    <Chip
+                      selected={repeatIntervalWeeks === 3}
+                      tone="accent"
+                      onClick={() => setRepeatIntervalWeeks(3)}
+                    >
                       Cada 3 semanas
                     </Chip>
-                    <Chip selected={repeatIntervalWeeks === 4} tone="accent" onClick={() => setRepeatIntervalWeeks(4)}>
+                    <Chip
+                      selected={repeatIntervalWeeks === 4}
+                      tone="accent"
+                      onClick={() => setRepeatIntervalWeeks(4)}
+                    >
                       Cada mes
                     </Chip>
                   </div>
@@ -412,7 +439,11 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
         )}
 
         <label className={styles.packageToggle}>
-          <input type="checkbox" checked={addReminder} onChange={(e) => setAddReminder(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={addReminder}
+            onChange={(e) => setAddReminder(e.target.checked)}
+          />
           <CalendarIcon className={styles.chipIcon} aria-hidden="true" />
           <span>Recordarme por calendario (24h y 1h antes)</span>
         </label>

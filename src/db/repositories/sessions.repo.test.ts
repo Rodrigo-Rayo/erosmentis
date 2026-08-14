@@ -10,6 +10,7 @@ import {
   createWeeklySeries,
   listFutureSeriesSessions,
   listSessionsForClient,
+  listUpcomingSessions,
   markSessionPaid,
   restoreSession,
   restoreSessions,
@@ -434,5 +435,46 @@ describe('updateSessionDetails', () => {
     const untouched = await db.sessions.get(session.id)
     expect(untouched?.priceCents).toBe(5500)
     expect(untouched?.serviceTypeId).toBe(serviceType.id)
+  })
+})
+
+describe('listUpcomingSessions', () => {
+  it('returns only still-scheduled sessions from the given point on, earliest first', async () => {
+    const client = await createClient({ kind: 'individual', people: [{ name: 'Nora Blanco' }] })
+    const serviceType = await getIndividualServiceType()
+    const now = Date.now()
+    const DAY_MS = 24 * 60 * 60 * 1000
+
+    const past = await createSession({
+      clientId: client.id,
+      serviceTypeId: serviceType.id,
+      startAt: now - DAY_MS,
+      modality: 'online',
+    })
+    const soon = await createSession({
+      clientId: client.id,
+      serviceTypeId: serviceType.id,
+      startAt: now + DAY_MS,
+      modality: 'online',
+    })
+    const later = await createSession({
+      clientId: client.id,
+      serviceTypeId: serviceType.id,
+      startAt: now + 2 * DAY_MS,
+      modality: 'online',
+    })
+    const cancelled = await createSession({
+      clientId: client.id,
+      serviceTypeId: serviceType.id,
+      startAt: now + 3 * DAY_MS,
+      modality: 'online',
+    })
+    await updateSessionAttendance(cancelled.id, 'cancelled_by_client')
+
+    const upcoming = await listUpcomingSessions(now)
+
+    expect(upcoming.map((s) => s.id)).toEqual([soon.id, later.id])
+    expect(upcoming.map((s) => s.id)).not.toContain(past.id)
+    expect(upcoming.map((s) => s.id)).not.toContain(cancelled.id)
   })
 })
