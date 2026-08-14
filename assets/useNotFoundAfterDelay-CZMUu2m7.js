@@ -1,1 +1,0 @@
-import{C as e,T as t}from"./NavIcons-BX_5Vnd_.js";var n=t(e(),1),r=1500;function i(e,t=r){let[i,a]=(0,n.useState)(!1);return(0,n.useEffect)(()=>{if(e!==void 0){a(!1);return}let n=setTimeout(()=>a(!0),t);return()=>clearTimeout(n)},[e,t]),i}export{i as t};
