@@ -109,7 +109,7 @@ export function NewClientSheet() {
         {duplicate ? (
           <div className={styles.duplicateWarning}>
             <p className={styles.duplicateWarningText}>
-              Ya existe un paciente llamado "{duplicate.displayName}". ¿Querés crear otro con el
+              Ya existe un paciente llamado "{duplicate.displayName}". ¿Quieres crear otro con el
               mismo nombre?
             </p>
             <Button fullWidth onClick={() => handleSave(true)} disabled={isSaving}>
