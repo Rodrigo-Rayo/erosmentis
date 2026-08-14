@@ -131,6 +131,39 @@
   cursor: pointer;
 }
 
+.deleteButton {
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  color: var(--color-negative);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.deleteIcon {
+  width: 17px;
+  height: 17px;
+}
+
+.confirmDelete {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2);
+}
+
+.confirmDeleteText {
+  margin: 0;
+  color: var(--color-ink-muted);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}
+
 .menu {
   display: flex;
   flex-direction: column;

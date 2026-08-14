@@ -11,7 +11,7 @@ import { MonthCalendarGrid } from '@/features/month/MonthCalendarGrid'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { MarkPaidSheet } from '@/features/sessions/MarkPaidSheet'
 import { Chip } from '@/components/ui/Chip'
-import { ChevronLeftIcon, ChevronRightIcon } from '@/components/icons/NavIcons'
+import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from '@/components/icons/NavIcons'
 import { useToast } from '@/components/ui/Toast'
 import { getErrorMessage } from '@/domain/errors'
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation'
@@ -219,7 +219,7 @@ export function DayScreen() {
               <h2 className={styles.sectionLabel}>Sesiones</h2>
               {daySessions.length === 0 ? (
                 <EmptyState
-                  emoji="🌿"
+                  icon={<CalendarIcon />}
                   title="Sin sesiones este día"
                   description="Toca el botón + para agendar la próxima."
                 />

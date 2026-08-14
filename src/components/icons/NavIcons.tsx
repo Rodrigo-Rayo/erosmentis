@@ -103,6 +103,16 @@ export function WarningIcon(props: IconProps) {
   )
 }
 
+/** Bar chart — reports/stats empty states. */
+export function ChartIcon(props: IconProps) {
+  return (
+    <svg {...BASE_PROPS} {...props}>
+      <path d="M4 20V10M12 20V4M20 20v-7" />
+      <path d="M2.5 20h19" />
+    </svg>
+  )
+}
+
 /** Archive box — archiving a patient. */
 export function ArchiveIcon(props: IconProps) {
   return (
@@ -110,6 +120,17 @@ export function ArchiveIcon(props: IconProps) {
       <rect x="3.5" y="4.5" width="17" height="4.5" rx="1.3" />
       <path d="M4.5 9v9a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5V9" />
       <path d="M10 13.2h4" />
+    </svg>
+  )
+}
+
+/** Trash can — permanent deletion. */
+export function TrashIcon(props: IconProps) {
+  return (
+    <svg {...BASE_PROPS} {...props}>
+      <path d="M4.5 7h15M9.5 7V5a1.5 1.5 0 0 1 1.5-1.5h2A1.5 1.5 0 0 1 14.5 5v2" />
+      <path d="M6.5 7l.8 12.1A1.6 1.6 0 0 0 8.9 20.5h6.2a1.6 1.6 0 0 0 1.6-1.4L17.5 7" />
+      <path d="M10.3 11v6M13.7 11v6" />
     </svg>
   )
 }

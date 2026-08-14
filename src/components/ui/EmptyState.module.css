@@ -8,8 +8,21 @@
   color: var(--color-ink-muted);
 }
 
-.emoji {
-  font-size: 2.5rem;
+.iconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--color-accent-soft);
+  color: var(--color-accent);
+  margin-bottom: var(--space-1);
+}
+
+.iconWrap svg {
+  width: 30px;
+  height: 30px;
 }
 
 .title {

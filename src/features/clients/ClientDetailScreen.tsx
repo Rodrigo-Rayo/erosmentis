@@ -19,6 +19,7 @@ import { MarkPaidSheet } from '@/features/sessions/MarkPaidSheet'
 import { useToast } from '@/components/ui/Toast'
 import { useNotFoundAfterDelay } from '@/hooks/useNotFoundAfterDelay'
 import { ChatIcon, CoupleIcon, EditIcon, PhoneIcon } from '@/components/icons/SessionIcons'
+import { CalendarIcon } from '@/components/icons/NavIcons'
 import type { PaymentMethod, Session } from '@/domain/types'
 import styles from './ClientDetailScreen.module.css'
 
@@ -81,7 +82,9 @@ export function ClientDetailScreen() {
       toast.show('Bono eliminado', {
         label: 'Deshacer',
         onClick: () =>
-          restorePackage(packageId, paymentIds).catch((error) => toast.show(getErrorMessage(error))),
+          restorePackage(packageId, paymentIds).catch((error) =>
+            toast.show(getErrorMessage(error)),
+          ),
       })
     } catch (error) {
       toast.show(getErrorMessage(error))
@@ -183,7 +186,7 @@ export function ClientDetailScreen() {
       <section className={styles.history}>
         <h2 className={styles.historyTitle}>Historial</h2>
         {sessions.length === 0 ? (
-          <EmptyState emoji="📋" title="Sin sesiones aún" />
+          <EmptyState icon={<CalendarIcon />} title="Sin sesiones aún" />
         ) : (
           <SessionDayList
             sessions={sessions}

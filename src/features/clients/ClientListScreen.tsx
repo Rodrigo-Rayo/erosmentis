@@ -5,6 +5,7 @@ import {
   archiveClient,
   listArchivedClients,
   searchClients,
+  softDeleteClient,
   unarchiveClient,
 } from '@/db/repositories/clients.repo'
 import { listUpcomingSessions } from '@/db/repositories/sessions.repo'
@@ -12,10 +13,11 @@ import { formatDateTimeLabel } from '@/domain/dates'
 import { getErrorMessage } from '@/domain/errors'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Chip } from '@/components/ui/Chip'
+import { Button } from '@/components/ui/Button'
 import { Sheet } from '@/components/ui/Sheet'
 import { useToast } from '@/components/ui/Toast'
 import { CoupleIcon, EditIcon } from '@/components/icons/SessionIcons'
-import { ArchiveIcon } from '@/components/icons/NavIcons'
+import { ArchiveIcon, PeopleIcon, TrashIcon } from '@/components/icons/NavIcons'
 import { useLongPress } from '@/hooks/useLongPress'
 import type { Client, Session } from '@/domain/types'
 import styles from './ClientListScreen.module.css'
@@ -81,6 +83,8 @@ export function ClientListScreen() {
   const [query, setQuery] = useState('')
   const [subTab, setSubTab] = useState<SubTab>('activos')
   const [menuClient, setMenuClient] = useState<Client | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<Client | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
   const location = useLocation()
   const clients = useLiveQuery(() => searchClients(query), [query], [])
   const archivedClients = useLiveQuery(() => listArchivedClients(), [], [])
@@ -102,6 +106,20 @@ export function ClientListScreen() {
       toast.show('Paciente restaurado')
     } catch (error) {
       toast.show(getErrorMessage(error))
+    }
+  }
+
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return
+    setIsDeleting(true)
+    try {
+      await softDeleteClient(deleteTarget.id)
+      toast.show('Paciente eliminado definitivamente')
+      setDeleteTarget(null)
+    } catch (error) {
+      toast.show(getErrorMessage(error))
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -172,7 +190,7 @@ export function ClientListScreen() {
 
           {clients.length === 0 ? (
             <EmptyState
-              emoji="👋"
+              icon={<PeopleIcon />}
               title="Aún no hay pacientes"
               description="Créalos aquí o desde 'Nueva sesión'."
             />
@@ -191,7 +209,7 @@ export function ClientListScreen() {
           )}
         </>
       ) : archivedClients.length === 0 ? (
-        <EmptyState emoji="🗂️" title="Sin pacientes archivados" />
+        <EmptyState icon={<ArchiveIcon />} title="Sin pacientes archivados" />
       ) : (
         <ul className={styles.list}>
           {archivedClients.map((client) => (
@@ -213,6 +231,14 @@ export function ClientListScreen() {
               >
                 Restaurar
               </button>
+              <button
+                type="button"
+                className={styles.deleteButton}
+                onClick={() => setDeleteTarget(client)}
+                aria-label={`Eliminar ${client.displayName} definitivamente`}
+              >
+                <TrashIcon className={styles.deleteIcon} />
+              </button>
             </li>
           ))}
         </ul>
@@ -233,6 +259,26 @@ export function ClientListScreen() {
               <ArchiveIcon className={styles.menuIcon} aria-hidden="true" />
               Archivar paciente
             </button>
+          </div>
+        </Sheet>
+      )}
+
+      {deleteTarget && (
+        <Sheet
+          title={`Eliminar a ${deleteTarget.displayName}`}
+          onClose={() => setDeleteTarget(null)}
+        >
+          <div className={styles.confirmDelete}>
+            <p className={styles.confirmDeleteText}>
+              Se eliminará su ficha para siempre — nombre, teléfono y notas. No se puede deshacer.
+              Sus sesiones y pagos ya registrados seguirán contando en Mes e Informes.
+            </p>
+            <Button variant="danger" fullWidth onClick={handleConfirmDelete} disabled={isDeleting}>
+              {isDeleting ? 'Eliminando…' : 'Eliminar para siempre'}
+            </Button>
+            <Button variant="secondary" fullWidth onClick={() => setDeleteTarget(null)}>
+              Cancelar
+            </Button>
           </div>
         </Sheet>
       )}

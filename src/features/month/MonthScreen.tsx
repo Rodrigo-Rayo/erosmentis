@@ -14,7 +14,8 @@ import { getErrorMessage } from '@/domain/errors'
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation'
 import { SlideFade } from '@/components/motion/SlideFade'
 import { Chip } from '@/components/ui/Chip'
-import { ChevronLeftIcon, ChevronRightIcon } from '@/components/icons/NavIcons'
+import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from '@/components/icons/NavIcons'
+import { CoinIcon } from '@/components/icons/SessionIcons'
 import { ReportsPanel } from '@/features/reports/ReportsPanel'
 import type { PaymentMethod, Session } from '@/domain/types'
 import styles from './MonthScreen.module.css'
@@ -140,7 +141,7 @@ export function MonthScreen() {
             <section className={styles.list}>
               {visibleSessions.length === 0 ? (
                 <EmptyState
-                  emoji={showPendingOnly ? '✨' : '🌿'}
+                  icon={showPendingOnly ? <CoinIcon /> : <CalendarIcon />}
                   title={showPendingOnly ? 'Nada pendiente de cobro' : 'Sin sesiones este mes'}
                 />
               ) : (

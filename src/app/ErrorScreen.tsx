@@ -1,3 +1,4 @@
+import { WarningIcon } from '@/components/icons/NavIcons'
 import styles from './ErrorBoundary.module.css'
 
 interface ErrorScreenProps {
@@ -8,8 +9,8 @@ interface ErrorScreenProps {
 export function ErrorScreen({ title, description }: ErrorScreenProps) {
   return (
     <div className={styles.wrapper}>
-      <span className={styles.emoji} aria-hidden="true">
-        🌱
+      <span className={styles.iconWrap} aria-hidden="true">
+        <WarningIcon className={styles.icon} />
       </span>
       <h1 className={styles.title}>{title}</h1>
       <p className={styles.description}>{description}</p>

@@ -18,7 +18,7 @@ import { Chip } from '@/components/ui/Chip'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
 import { getErrorMessage } from '@/domain/errors'
-import { CloseIcon } from '@/components/icons/NavIcons'
+import { ChartIcon, CloseIcon } from '@/components/icons/NavIcons'
 import { ExpenseSheet } from './ExpenseSheet'
 import styles from './ReportsPanel.module.css'
 
@@ -110,7 +110,7 @@ export function ReportsPanel() {
     return (
       <div className={styles.wrapper}>
         <EmptyState
-          emoji="📊"
+          icon={<ChartIcon />}
           title="Sin datos todavía"
           description="Cuando registres sesiones o gastos, aquí verás el resumen."
           action={
