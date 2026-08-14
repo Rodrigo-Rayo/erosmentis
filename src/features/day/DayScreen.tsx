@@ -190,6 +190,28 @@ export function DayScreen() {
           </section>
 
           <SlideFade itemKey={dayRangeValue.start} className={styles.daySlideContent}>
+            {daySlots.length > 0 && (
+              <div className={styles.dayFreeStrip}>
+                <span className={styles.dayFreeStripLabel}>Libres</span>
+                <div className={styles.dayFreeStripScroll}>
+                  {freeDaySlots.length === 0 ? (
+                    <span className={styles.dayFreeStripEmpty}>Completo</span>
+                  ) : (
+                    freeDaySlots.map((slot) => (
+                      <Link
+                        key={`${slot.hour}:${slot.minute}`}
+                        to="/sesion/nueva"
+                        state={{ backgroundLocation: location, presetStartAt: slot.startAt }}
+                        className={styles.dayFreeStripChip}
+                      >
+                        {String(slot.hour).padStart(2, '0')}:{String(slot.minute).padStart(2, '0')}
+                      </Link>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
             <section className={styles.list}>
               <h2 className={styles.sectionLabel}>Sesiones</h2>
               {daySessions.length === 0 ? (
@@ -210,28 +232,6 @@ export function DayScreen() {
                 ))
               )}
             </section>
-
-            {daySlots.length > 0 && (
-              <section className={styles.dayFreeSlots}>
-                <h2 className={styles.dayFreeSlotsLabel}>Horas libres</h2>
-                {freeDaySlots.length === 0 ? (
-                  <p className={styles.weekEmpty}>Sin huecos libres este día.</p>
-                ) : (
-                  <div className={styles.weekSlotChips}>
-                    {freeDaySlots.map((slot) => (
-                      <Link
-                        key={`${slot.hour}:${slot.minute}`}
-                        to="/sesion/nueva"
-                        state={{ backgroundLocation: location, presetStartAt: slot.startAt }}
-                        className={styles.daySlotChip}
-                      >
-                        {String(slot.hour).padStart(2, '0')}:{String(slot.minute).padStart(2, '0')}
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </section>
-            )}
           </SlideFade>
         </>
       ) : (
