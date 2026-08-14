@@ -1,3 +1,4 @@
+import { Fragment } from 'react'
 import type { Client, ServiceType, Session } from '@/domain/types'
 import { SessionRow } from './SessionRow'
 import styles from './SessionDayList.module.css'
@@ -14,6 +15,12 @@ interface SessionDayListProps {
 function dayKey(timestamp: number): string {
   const d = new Date(timestamp)
   return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+}
+
+function startOfDay(timestamp: number): number {
+  const d = new Date(timestamp)
+  d.setHours(0, 0, 0, 0)
+  return d.getTime()
 }
 
 function formatDayHeader(timestamp: number): string {
@@ -52,7 +59,8 @@ export function SessionDayList({
   order = 'desc',
 }: SessionDayListProps) {
   const sorted = [...sessions].sort((a, b) => (order === 'asc' ? a.startAt - b.startAt : b.startAt - a.startAt))
-  const groups: { key: string; label: string; items: Session[] }[] = []
+  const today = startOfDay(Date.now())
+  const groups: { key: string; label: string; items: Session[]; isPast: boolean }[] = []
 
   for (const session of sorted) {
     const key = dayKey(session.startAt)
@@ -60,30 +68,50 @@ export function SessionDayList({
     if (lastGroup && lastGroup.key === key) {
       lastGroup.items.push(session)
     } else {
-      groups.push({ key, label: formatDayHeader(session.startAt), items: [session] })
+      groups.push({
+        key,
+        label: formatDayHeader(session.startAt),
+        items: [session],
+        isPast: startOfDay(session.startAt) < today,
+      })
     }
   }
 
+  // Anchor point for scanning a full month at a glance: only shown when the list actually
+  // spans both past and non-past days, in the direction where past comes before that (asc).
+  const todayDividerIndex =
+    order === 'asc' ? groups.findIndex((g, i) => !g.isPast && (i === 0 || groups[i - 1].isPast)) : -1
+
   return (
     <div className={styles.wrapper}>
-      {groups.map((group) => (
-        <section key={group.key} className={styles.group}>
-          <h3 className={styles.dayHeader}>{group.label}</h3>
-          <div className={styles.rows}>
-            {group.items
-              .slice()
-              .sort((a, b) => a.startAt - b.startAt)
-              .map((session) => (
-                <SessionRow
-                  key={session.id}
-                  session={session}
-                  client={clientsById.get(session.clientId)}
-                  serviceType={serviceTypesById.get(session.serviceTypeId)}
-                  onMarkPaid={onMarkPaid}
-                />
-              ))}
-          </div>
-        </section>
+      {groups.map((group, index) => (
+        <Fragment key={group.key}>
+          {index === todayDividerIndex && index > 0 && (
+            <div className={styles.todayDivider}>
+              <span>Hoy</span>
+            </div>
+          )}
+          <section className={styles.group}>
+            <h3 className={`${styles.dayHeader} ${group.isPast ? styles.dayHeaderPast : ''}`}>
+              {group.label}
+            </h3>
+            <div className={styles.rows}>
+              {group.items
+                .slice()
+                .sort((a, b) => a.startAt - b.startAt)
+                .map((session) => (
+                  <SessionRow
+                    key={session.id}
+                    session={session}
+                    client={clientsById.get(session.clientId)}
+                    serviceType={serviceTypesById.get(session.serviceTypeId)}
+                    onMarkPaid={onMarkPaid}
+                    dim={group.isPast && session.paymentStatus !== 'pending'}
+                  />
+                ))}
+            </div>
+          </section>
+        </Fragment>
       ))}
     </div>
   )

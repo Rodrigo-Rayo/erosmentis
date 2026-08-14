@@ -10,6 +10,10 @@ interface SessionRowProps {
   client: Client | undefined
   serviceType: ServiceType | undefined
   onMarkPaid: (session: Session) => void
+  /** Dims the row for past sessions that are already resolved (paid, free, or via package) —
+   * a still-pending session stays at full contrast even if its day is in the past, since it's
+   * money still owed. */
+  dim?: boolean
 }
 
 const STATUS_LABEL: Record<Session['paymentStatus'], string> = {
@@ -26,7 +30,7 @@ const STATUS_CLASS: Record<Session['paymentStatus'], string> = {
   package: styles.statusPackage,
 }
 
-export function SessionRow({ session, client, serviceType, onMarkPaid }: SessionRowProps) {
+export function SessionRow({ session, client, serviceType, onMarkPaid, dim = false }: SessionRowProps) {
   const navigate = useNavigate()
   const location = useLocation()
 
@@ -52,7 +56,7 @@ export function SessionRow({ session, client, serviceType, onMarkPaid }: Session
     <div
       role="button"
       tabIndex={0}
-      className={styles.row}
+      className={`${styles.row} ${dim ? styles.rowDim : ''}`}
       onClick={openDetail}
       onKeyDown={handleKeyDown}
     >

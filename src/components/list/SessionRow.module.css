@@ -27,6 +27,15 @@
   transform: scale(0.99);
 }
 
+.rowDim {
+  opacity: 0.55;
+}
+
+.rowDim:hover,
+.rowDim:focus-visible {
+  opacity: 0.85;
+}
+
 .timeCol {
   display: flex;
   flex-direction: column;
