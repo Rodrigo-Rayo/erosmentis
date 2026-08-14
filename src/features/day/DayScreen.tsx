@@ -202,7 +202,7 @@ export function DayScreen() {
                         key={`${slot.hour}:${slot.minute}`}
                         to="/sesion/nueva"
                         state={{ backgroundLocation: location, presetStartAt: slot.startAt }}
-                        className={styles.weekSlotChip}
+                        className={styles.dayFreeStripChip}
                       >
                         {String(slot.hour).padStart(2, '0')}:{String(slot.minute).padStart(2, '0')}
                       </Link>
