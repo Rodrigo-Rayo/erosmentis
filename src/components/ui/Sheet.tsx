@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
+import { CloseIcon } from '@/components/icons/NavIcons'
 import styles from './Sheet.module.css'
 
 interface SheetProps {
@@ -52,8 +53,13 @@ export function Sheet({ title, children, onClose }: SheetProps) {
         <div className={styles.grabber} />
         <div className={styles.header}>
           <h2 className={styles.title}>{title}</h2>
-          <button type="button" className={styles.closeButton} onClick={handleClose} aria-label="Cerrar">
-            ✕
+          <button
+            type="button"
+            className={styles.closeButton}
+            onClick={handleClose}
+            aria-label="Cerrar"
+          >
+            <CloseIcon className={styles.closeIcon} />
           </button>
         </div>
         <div className={styles.content}>{children}</div>

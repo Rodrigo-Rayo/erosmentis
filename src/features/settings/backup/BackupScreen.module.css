@@ -5,10 +5,18 @@
 }
 
 .back {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
   color: var(--color-accent);
   text-decoration: none;
   font-weight: 600;
   align-self: flex-start;
+}
+
+.backIcon {
+  width: 16px;
+  height: 16px;
 }
 
 .title {
@@ -68,12 +76,23 @@
 }
 
 .warning {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
   background: var(--color-pending-soft);
   color: var(--color-ink);
   border-radius: var(--radius-md);
   padding: var(--space-3);
   font-size: var(--text-sm);
   margin: 0;
+}
+
+.warningIcon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  color: var(--color-pending);
 }
 
 .error {

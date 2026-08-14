@@ -30,7 +30,15 @@
 }
 
 .backupLink {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
   color: var(--color-accent);
   font-weight: 600;
   text-decoration: none;
+}
+
+.backupLinkIcon {
+  width: 16px;
+  height: 16px;
 }

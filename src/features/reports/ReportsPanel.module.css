@@ -260,6 +260,11 @@
   justify-content: center;
 }
 
+.deleteExpenseIcon {
+  width: 15px;
+  height: 15px;
+}
+
 .breakdownList {
   display: flex;
   flex-direction: column;

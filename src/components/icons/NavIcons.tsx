@@ -55,3 +55,61 @@ export function SlidersIcon(props: IconProps) {
     </svg>
   )
 }
+
+/** Close ("✕") — sheets/modals and small dismiss/delete buttons. */
+export function CloseIcon(props: IconProps) {
+  return (
+    <svg {...BASE_PROPS} {...props}>
+      <path d="M6 6l12 12M18 6L6 18" />
+    </svg>
+  )
+}
+
+/** Previous ("‹") — month/week/day paging and back links. */
+export function ChevronLeftIcon(props: IconProps) {
+  return (
+    <svg {...BASE_PROPS} {...props}>
+      <path d="M14.5 5l-7 7 7 7" />
+    </svg>
+  )
+}
+
+/** Next ("›") — month/week/day paging. */
+export function ChevronRightIcon(props: IconProps) {
+  return (
+    <svg {...BASE_PROPS} {...props}>
+      <path d="M9.5 5l7 7-7 7" />
+    </svg>
+  )
+}
+
+/** Forward/disclosure ("→") — links that lead deeper into a flow. */
+export function ArrowRightIcon(props: IconProps) {
+  return (
+    <svg {...BASE_PROPS} {...props}>
+      <path d="M4 12h15M13 6l6 6-6 6" />
+    </svg>
+  )
+}
+
+/** Warning triangle — inline caution notices. */
+export function WarningIcon(props: IconProps) {
+  return (
+    <svg {...BASE_PROPS} {...props}>
+      <path d="M12 3.5 21 19.5H3L12 3.5Z" />
+      <path d="M12 9.5v5" />
+      <circle cx="12" cy="17.1" r="0.9" fill="currentColor" stroke="none" />
+    </svg>
+  )
+}
+
+/** Archive box — archiving a patient. */
+export function ArchiveIcon(props: IconProps) {
+  return (
+    <svg {...BASE_PROPS} {...props}>
+      <rect x="3.5" y="4.5" width="17" height="4.5" rx="1.3" />
+      <path d="M4.5 9v9a1.5 1.5 0 0 0 1.5 1.5h12a1.5 1.5 0 0 0 1.5-1.5V9" />
+      <path d="M10 13.2h4" />
+    </svg>
+  )
+}

@@ -6,6 +6,7 @@ import { useToast } from '@/components/ui/Toast'
 import { getSettings } from '@/db/repositories/settings.repo'
 import { getEarliestClientCreatedAt } from '@/db/repositories/clients.repo'
 import { getBackupReminderState } from '@/domain/backupReminder'
+import { ChevronLeftIcon, WarningIcon } from '@/components/icons/NavIcons'
 import { exportBackup } from './exportBackup'
 import {
   decryptBackupFile,
@@ -121,7 +122,8 @@ export function BackupScreen() {
   return (
     <div className={styles.wrapper}>
       <Link to="/ajustes" className={styles.back}>
-        ‹ Ajustes
+        <ChevronLeftIcon className={styles.backIcon} aria-hidden="true" />
+        <span>Ajustes</span>
       </Link>
       <h1 className={styles.title}>Copia de seguridad</h1>
       <p className={styles.intro}>
@@ -159,8 +161,11 @@ export function BackupScreen() {
               onChange={(e) => setExportPasswordConfirm(e.target.value)}
             />
             <p className={styles.warning}>
-              ⚠️ Si olvidas esta contraseña, nadie podrá recuperar el archivo. Guárdala en un lugar
-              seguro.
+              <WarningIcon className={styles.warningIcon} aria-hidden="true" />
+              <span>
+                Si olvidas esta contraseña, nadie podrá recuperar el archivo. Guárdala en un lugar
+                seguro.
+              </span>
             </p>
             <Button fullWidth onClick={handleExport} disabled={!passwordsMatch || isExporting}>
               {isExporting ? 'Cifrando…' : 'Descargar copia cifrada'}

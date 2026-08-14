@@ -18,6 +18,7 @@ import { Chip } from '@/components/ui/Chip'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { useToast } from '@/components/ui/Toast'
 import { getErrorMessage } from '@/domain/errors'
+import { CloseIcon } from '@/components/icons/NavIcons'
 import { ExpenseSheet } from './ExpenseSheet'
 import styles from './ReportsPanel.module.css'
 
@@ -39,7 +40,10 @@ export function ReportsPanel() {
   const allSessions = useLiveQuery(() => listAllSessions(), [], [])
   const allExpenses = useLiveQuery(() => listAllExpenses(), [], [])
   const serviceTypes = useLiveQuery(() => db.serviceTypes.toArray(), [], [])
-  const serviceTypesById = useMemo(() => new Map(serviceTypes.map((s) => [s.id, s])), [serviceTypes])
+  const serviceTypesById = useMemo(
+    () => new Map(serviceTypes.map((s) => [s.id, s])),
+    [serviceTypes],
+  )
 
   const earliestStartAt = allSessions[0]?.startAt ?? Date.now()
 
@@ -55,7 +59,10 @@ export function ReportsPanel() {
   const range = useMemo(() => {
     if (period === 'year') {
       const year = new Date().getFullYear()
-      return { start: new Date(year, 0, 1).getTime(), end: new Date(year, 11, 31, 23, 59, 59, 999).getTime() }
+      return {
+        start: new Date(year, 0, 1).getTime(),
+        end: new Date(year, 11, 31, 23, 59, 59, 999).getTime(),
+      }
     }
     if (period === 'custom' && customFrom && customTo) {
       const end = new Date(customTo)
@@ -68,11 +75,17 @@ export function ReportsPanel() {
   // "Histórico" is every record ever entered — no upper bound at "now", since already-scheduled
   // future sessions are legitimately billed/pending too, same as everywhere else in the app.
   const periodSessions = useMemo(
-    () => (range ? allSessions.filter((s) => s.startAt >= range.start && s.startAt <= range.end) : allSessions),
+    () =>
+      range
+        ? allSessions.filter((s) => s.startAt >= range.start && s.startAt <= range.end)
+        : allSessions,
     [allSessions, range],
   )
   const periodExpenses = useMemo(
-    () => (range ? allExpenses.filter((e) => e.incurredAt >= range.start && e.incurredAt <= range.end) : allExpenses),
+    () =>
+      range
+        ? allExpenses.filter((e) => e.incurredAt >= range.start && e.incurredAt <= range.end)
+        : allExpenses,
     [allExpenses, range],
   )
 
@@ -101,13 +114,20 @@ export function ReportsPanel() {
           title="Sin datos todavía"
           description="Cuando registres sesiones o gastos, aquí verás el resumen."
           action={
-            <button type="button" className={styles.addExpenseButton} onClick={() => setIsAddingExpense(true)}>
+            <button
+              type="button"
+              className={styles.addExpenseButton}
+              onClick={() => setIsAddingExpense(true)}
+            >
               + Añadir gasto
             </button>
           }
         />
         {isAddingExpense && (
-          <ExpenseSheet onClose={() => setIsAddingExpense(false)} onSaved={() => setIsAddingExpense(false)} />
+          <ExpenseSheet
+            onClose={() => setIsAddingExpense(false)}
+            onSaved={() => setIsAddingExpense(false)}
+          />
         )}
       </div>
     )
@@ -116,7 +136,9 @@ export function ReportsPanel() {
   const periodLabel =
     period === 'historic'
       ? `Desde ${capitalize(
-          new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(earliestStartAt),
+          new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(
+            earliestStartAt,
+          ),
         )}`
       : period === 'year'
         ? `Año ${new Date().getFullYear()}`
@@ -218,7 +240,11 @@ export function ReportsPanel() {
       <section className={styles.breakdownSection}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Gastos</h2>
-          <button type="button" className={styles.addExpenseButton} onClick={() => setIsAddingExpense(true)}>
+          <button
+            type="button"
+            className={styles.addExpenseButton}
+            onClick={() => setIsAddingExpense(true)}
+          >
             + Añadir gasto
           </button>
         </div>
@@ -261,7 +287,7 @@ export function ReportsPanel() {
                     onClick={() => handleDeleteExpense(expense.id)}
                     aria-label="Eliminar gasto"
                   >
-                    ✕
+                    <CloseIcon className={styles.deleteExpenseIcon} />
                   </button>
                 </div>
               ))}
@@ -270,7 +296,10 @@ export function ReportsPanel() {
       </section>
 
       {isAddingExpense && (
-        <ExpenseSheet onClose={() => setIsAddingExpense(false)} onSaved={() => setIsAddingExpense(false)} />
+        <ExpenseSheet
+          onClose={() => setIsAddingExpense(false)}
+          onSaved={() => setIsAddingExpense(false)}
+        />
       )}
 
       {yearBreakdown.length > 1 && (

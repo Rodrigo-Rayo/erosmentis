@@ -14,6 +14,7 @@ import { getErrorMessage } from '@/domain/errors'
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation'
 import { SlideFade } from '@/components/motion/SlideFade'
 import { Chip } from '@/components/ui/Chip'
+import { ChevronLeftIcon, ChevronRightIcon } from '@/components/icons/NavIcons'
 import { ReportsPanel } from '@/features/reports/ReportsPanel'
 import type { PaymentMethod, Session } from '@/domain/types'
 import styles from './MonthScreen.module.css'
@@ -50,7 +51,9 @@ export function MonthScreen() {
     ? sessions.filter((s) => isSessionBillable(s) && s.paymentStatus === 'pending')
     : sessions
 
-  const monthLabel = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(cursor)
+  const monthLabel = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' }).format(
+    cursor,
+  )
 
   async function handleConfirmPayment(method: PaymentMethod) {
     if (!payingSession) return
@@ -87,22 +90,40 @@ export function MonthScreen() {
       {subTab === 'mes' ? (
         <div style={{ touchAction: 'pan-y' }} {...monthSwipe}>
           <header className={styles.header}>
-            <button type="button" className={styles.navButton} onClick={() => handleMonthNav(-1)}>
-              ‹
+            <button
+              type="button"
+              className={styles.navButton}
+              onClick={() => handleMonthNav(-1)}
+              aria-label="Mes anterior"
+            >
+              <ChevronLeftIcon className={styles.navIcon} />
             </button>
             <h1 className={styles.month}>{capitalize(monthLabel)}</h1>
-            <button type="button" className={styles.navButton} onClick={() => handleMonthNav(1)}>
-              ›
+            <button
+              type="button"
+              className={styles.navButton}
+              onClick={() => handleMonthNav(1)}
+              aria-label="Mes siguiente"
+            >
+              <ChevronRightIcon className={styles.navIcon} />
             </button>
           </header>
 
           <SlideFade itemKey={monthOffset} className={styles.slideContent}>
             <section className={styles.totals}>
-              <button type="button" className={styles.totalItem} onClick={() => setShowPendingOnly(false)}>
+              <button
+                type="button"
+                className={styles.totalItem}
+                onClick={() => setShowPendingOnly(false)}
+              >
                 <span className={styles.totalLabel}>Facturado</span>
                 <span className={styles.totalValue}>{formatCents(totals.billedCents)}</span>
               </button>
-              <button type="button" className={styles.totalItem} onClick={() => setShowPendingOnly(false)}>
+              <button
+                type="button"
+                className={styles.totalItem}
+                onClick={() => setShowPendingOnly(false)}
+              >
                 <span className={styles.totalLabel}>Cobrado</span>
                 <span className={styles.totalValue}>{formatCents(totals.collectedCents)}</span>
               </button>

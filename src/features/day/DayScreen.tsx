@@ -11,6 +11,7 @@ import { MonthCalendarGrid } from '@/features/month/MonthCalendarGrid'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { MarkPaidSheet } from '@/features/sessions/MarkPaidSheet'
 import { Chip } from '@/components/ui/Chip'
+import { ChevronLeftIcon, ChevronRightIcon } from '@/components/icons/NavIcons'
 import { useToast } from '@/components/ui/Toast'
 import { getErrorMessage } from '@/domain/errors'
 import { useSwipeNavigation } from '@/hooks/useSwipeNavigation'
@@ -169,16 +170,18 @@ export function DayScreen() {
                 type="button"
                 className={styles.navButton}
                 onClick={() => setMonthOffset((v) => v - 1)}
+                aria-label="Mes anterior"
               >
-                ‹
+                <ChevronLeftIcon className={styles.navIcon} />
               </button>
               <span className={styles.monthLabel}>{monthLabel}</span>
               <button
                 type="button"
                 className={styles.navButton}
                 onClick={() => setMonthOffset((v) => v + 1)}
+                aria-label="Mes siguiente"
               >
-                ›
+                <ChevronRightIcon className={styles.navIcon} />
               </button>
             </div>
             <MonthCalendarGrid
@@ -241,8 +244,9 @@ export function DayScreen() {
               type="button"
               className={styles.navButton}
               onClick={() => setWeekOffset((v) => v - 1)}
+              aria-label="Semana anterior"
             >
-              ‹
+              <ChevronLeftIcon className={styles.navIcon} />
             </button>
             <span className={styles.weekLabelGroup}>
               <span className={styles.weekLabel}>Horas libres esta semana</span>
@@ -252,8 +256,9 @@ export function DayScreen() {
               type="button"
               className={styles.navButton}
               onClick={() => setWeekOffset((v) => v + 1)}
+              aria-label="Semana siguiente"
             >
-              ›
+              <ChevronRightIcon className={styles.navIcon} />
             </button>
           </div>
           <SlideFade itemKey={weekOffset}>

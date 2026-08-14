@@ -7,7 +7,7 @@ import { Chip } from '@/components/ui/Chip'
 import { useToast } from '@/components/ui/Toast'
 import { ClientAutocomplete } from '@/features/clients/ClientAutocomplete'
 import { MonitorIcon, HomeIcon } from '@/components/icons/SessionIcons'
-import { CalendarIcon } from '@/components/icons/NavIcons'
+import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from '@/components/icons/NavIcons'
 import { listServiceTypes } from '@/db/repositories/serviceTypes.repo'
 import { findConsumablePackage, getPackageBalance } from '@/db/repositories/packages.repo'
 import { getClient } from '@/db/repositories/clients.repo'
@@ -249,7 +249,8 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
           <label className={styles.label}>Cuándo</label>
           <div className={styles.chipRow}>
             <Chip onClick={() => setStartAt(new Date(shiftDays(startAt.getTime(), -1)))}>
-              ‹ día
+              <ChevronLeftIcon className={styles.chipIcon} aria-hidden="true" />
+              <span>día</span>
             </Chip>
             <button
               type="button"
@@ -263,7 +264,10 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
             >
               {formatDateTimeLabel(startAt)}
             </button>
-            <Chip onClick={() => setStartAt(new Date(shiftDays(startAt.getTime(), 1)))}>día ›</Chip>
+            <Chip onClick={() => setStartAt(new Date(shiftDays(startAt.getTime(), 1)))}>
+              <span>día</span>
+              <ChevronRightIcon className={styles.chipIcon} aria-hidden="true" />
+            </Chip>
           </div>
           <input
             id="session-datetime-input"
