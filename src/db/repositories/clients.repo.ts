@@ -45,7 +45,12 @@ export async function createClient(input: CreateClientInput): Promise<Client> {
 
 export async function updateClient(
   id: string,
-  changes: Partial<Pick<Client, 'people' | 'kind' | 'defaultServiceTypeId' | 'defaultModality' | 'status' | 'notes'>>,
+  changes: Partial<
+    Pick<
+      Client,
+      'people' | 'kind' | 'defaultServiceTypeId' | 'defaultModality' | 'status' | 'notes'
+    >
+  >,
 ): Promise<void> {
   const patch: Partial<Client> = { ...changes }
   if (changes.people || changes.kind) {
@@ -67,14 +72,19 @@ export async function getClient(id: string): Promise<Client | undefined> {
 
 export async function listActiveClients(): Promise<Client[]> {
   const clients = await db.clients.where('status').equals('active').toArray()
-  return clients.filter((c) => c.deletedAt === null).sort((a, b) => a.displayName.localeCompare(b.displayName, 'es'))
+  return clients
+    .filter((c) => c.deletedAt === null)
+    .sort((a, b) => a.displayName.localeCompare(b.displayName, 'es'))
 }
 
 export interface ClientSearchResult extends Client {
   isRecent: boolean
 }
 
-export async function searchClients(query: string, recentClientIds: string[] = []): Promise<Client[]> {
+export async function searchClients(
+  query: string,
+  recentClientIds: string[] = [],
+): Promise<Client[]> {
   const all = await listActiveClients()
   const matches = all.filter((c) => matchesSearch(c.searchName, query))
   if (query.trim() === '') {
@@ -85,6 +95,15 @@ export async function searchClients(query: string, recentClientIds: string[] = [
     ]
   }
   return matches
+}
+
+/** Archived (soft-hidden) clients, alphabetical — backs the "Archivados" tab so a client
+ * archived by mistake, or one who resumes therapy later, can be found and restored. */
+export async function listArchivedClients(): Promise<Client[]> {
+  const clients = await db.clients.where('status').equals('archived').toArray()
+  return clients
+    .filter((c) => c.deletedAt === null)
+    .sort((a, b) => a.displayName.localeCompare(b.displayName, 'es'))
 }
 
 export async function archiveClient(id: string): Promise<void> {

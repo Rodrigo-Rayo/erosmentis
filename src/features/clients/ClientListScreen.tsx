@@ -1,18 +1,26 @@
 import { useMemo, useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { searchClients } from '@/db/repositories/clients.repo'
+import { listArchivedClients, searchClients, unarchiveClient } from '@/db/repositories/clients.repo'
 import { listUpcomingSessions } from '@/db/repositories/sessions.repo'
 import { formatDateTimeLabel } from '@/domain/dates'
+import { getErrorMessage } from '@/domain/errors'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { Chip } from '@/components/ui/Chip'
+import { useToast } from '@/components/ui/Toast'
 import { CoupleIcon } from '@/components/icons/SessionIcons'
 import type { Session } from '@/domain/types'
 import styles from './ClientListScreen.module.css'
 
+type SubTab = 'activos' | 'archivados'
+
 export function ClientListScreen() {
+  const toast = useToast()
   const [query, setQuery] = useState('')
+  const [subTab, setSubTab] = useState<SubTab>('activos')
   const location = useLocation()
   const clients = useLiveQuery(() => searchClients(query), [query], [])
+  const archivedClients = useLiveQuery(() => listArchivedClients(), [], [])
   const upcomingSessions = useLiveQuery(() => listUpcomingSessions(Date.now()), [], [])
 
   const nextSessionByClient = useMemo(() => {
@@ -24,6 +32,15 @@ export function ClientListScreen() {
     }
     return map
   }, [upcomingSessions])
+
+  async function handleRestore(clientId: string) {
+    try {
+      await unarchiveClient(clientId)
+      toast.show('Paciente restaurado')
+    } catch (error) {
+      toast.show(getErrorMessage(error))
+    }
+  }
 
   return (
     <div className={styles.wrapper}>
@@ -38,47 +55,90 @@ export function ClientListScreen() {
         </Link>
       </header>
 
-      <input
-        className={styles.search}
-        type="search"
-        placeholder="Buscar paciente…"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        inputMode="search"
-      />
+      <div className={styles.subTabToggle}>
+        <Chip selected={subTab === 'activos'} tone="accent" onClick={() => setSubTab('activos')}>
+          Activos
+        </Chip>
+        <Chip
+          selected={subTab === 'archivados'}
+          tone="accent"
+          onClick={() => setSubTab('archivados')}
+        >
+          Archivados{archivedClients.length > 0 ? ` (${archivedClients.length})` : ''}
+        </Chip>
+      </div>
 
-      {clients.length === 0 ? (
-        <EmptyState
-          emoji="👋"
-          title="Aún no hay pacientes"
-          description="Créalos aquí o desde 'Nueva sesión'."
-        />
+      {subTab === 'activos' ? (
+        <>
+          <input
+            className={styles.search}
+            type="search"
+            placeholder="Buscar paciente…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            inputMode="search"
+          />
+
+          {clients.length === 0 ? (
+            <EmptyState
+              emoji="👋"
+              title="Aún no hay pacientes"
+              description="Créalos aquí o desde 'Nueva sesión'."
+            />
+          ) : (
+            <ul className={styles.list}>
+              {clients.map((client) => {
+                const nextSession = nextSessionByClient.get(client.id)
+                return (
+                  <li key={client.id}>
+                    <Link to={`/clientes/${client.id}`} className={styles.item}>
+                      <span className={styles.avatar} aria-hidden="true">
+                        {client.kind === 'couple' ? (
+                          <CoupleIcon className={styles.avatarIcon} />
+                        ) : (
+                          client.displayName.charAt(0).toUpperCase()
+                        )}
+                      </span>
+                      <span className={styles.itemText}>
+                        <span className={styles.name}>{client.displayName}</span>
+                        {nextSession && (
+                          <span className={styles.nextSession}>
+                            Próxima: {formatDateTimeLabel(new Date(nextSession.startAt))}
+                          </span>
+                        )}
+                      </span>
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          )}
+        </>
+      ) : archivedClients.length === 0 ? (
+        <EmptyState emoji="🗂️" title="Sin pacientes archivados" />
       ) : (
         <ul className={styles.list}>
-          {clients.map((client) => {
-            const nextSession = nextSessionByClient.get(client.id)
-            return (
-              <li key={client.id}>
-                <Link to={`/clientes/${client.id}`} className={styles.item}>
-                  <span className={styles.avatar} aria-hidden="true">
-                    {client.kind === 'couple' ? (
-                      <CoupleIcon className={styles.avatarIcon} />
-                    ) : (
-                      client.displayName.charAt(0).toUpperCase()
-                    )}
-                  </span>
-                  <span className={styles.itemText}>
-                    <span className={styles.name}>{client.displayName}</span>
-                    {nextSession && (
-                      <span className={styles.nextSession}>
-                        Próxima: {formatDateTimeLabel(new Date(nextSession.startAt))}
-                      </span>
-                    )}
-                  </span>
-                </Link>
-              </li>
-            )
-          })}
+          {archivedClients.map((client) => (
+            <li key={client.id} className={styles.archivedItem}>
+              <Link to={`/clientes/${client.id}`} className={styles.archivedLink}>
+                <span className={styles.avatar} aria-hidden="true">
+                  {client.kind === 'couple' ? (
+                    <CoupleIcon className={styles.avatarIcon} />
+                  ) : (
+                    client.displayName.charAt(0).toUpperCase()
+                  )}
+                </span>
+                <span className={styles.name}>{client.displayName}</span>
+              </Link>
+              <button
+                type="button"
+                className={styles.restoreButton}
+                onClick={() => handleRestore(client.id)}
+              >
+                Restaurar
+              </button>
+            </li>
+          ))}
         </ul>
       )}
     </div>

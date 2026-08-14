@@ -7,6 +7,7 @@ import {
   createClient,
   getClient,
   listActiveClients,
+  listArchivedClients,
   searchClients,
   softDeleteClient,
   unarchiveClient,
@@ -95,6 +96,18 @@ describe('listActiveClients / archiveClient / unarchiveClient / softDeleteClient
     await unarchiveClient(client.id)
     const listed = await listActiveClients()
     expect(listed.map((c) => c.id)).toEqual([client.id])
+  })
+
+  it('listArchivedClients shows an archived client so it can be found and restored', async () => {
+    const client = await createClient({ kind: 'individual', people: [{ name: 'Pausa' }] })
+    expect(await listArchivedClients()).toHaveLength(0)
+
+    await archiveClient(client.id)
+    const archived = await listArchivedClients()
+    expect(archived.map((c) => c.id)).toEqual([client.id])
+
+    await unarchiveClient(client.id)
+    expect(await listArchivedClients()).toHaveLength(0)
   })
 })
 

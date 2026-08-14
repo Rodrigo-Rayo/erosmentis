@@ -6,7 +6,12 @@ import { Button } from '@/components/ui/Button'
 import { Chip } from '@/components/ui/Chip'
 import { useToast } from '@/components/ui/Toast'
 import { CoupleIcon } from '@/components/icons/SessionIcons'
-import { getClient, updateClient, archiveClient, unarchiveClient } from '@/db/repositories/clients.repo'
+import {
+  getClient,
+  updateClient,
+  archiveClient,
+  unarchiveClient,
+} from '@/db/repositories/clients.repo'
 import { getErrorMessage } from '@/domain/errors'
 import type { ClientKind } from '@/domain/types'
 import styles from './NewClientSheet.module.css'
@@ -66,14 +71,21 @@ export function EditClientSheet() {
     }
   }
 
-  async function handleDelete() {
+  async function handleArchive() {
     if (!id) return
     try {
       await archiveClient(id)
-      toast.show('Paciente eliminado', {
-        label: 'Deshacer',
-        onClick: () => unarchiveClient(id).catch((error: unknown) => toast.show(getErrorMessage(error))),
-      })
+      // Longer than the default toast, for a quick undo right after the tap — the patient can
+      // still be found and restored any time afterward from Pacientes > Archivados.
+      toast.show(
+        'Paciente archivado',
+        {
+          label: 'Deshacer',
+          onClick: () =>
+            unarchiveClient(id).catch((error: unknown) => toast.show(getErrorMessage(error))),
+        },
+        { durationMs: 8000 },
+      )
       navigate('/clientes', { replace: true })
     } catch (error) {
       toast.show(getErrorMessage(error))
@@ -94,7 +106,11 @@ export function EditClientSheet() {
     <Sheet title="Editar paciente" onClose={handleClose}>
       <div className={styles.form}>
         <div className={styles.chipRow}>
-          <Chip selected={kind === 'individual'} tone="accent" onClick={() => setKind('individual')}>
+          <Chip
+            selected={kind === 'individual'}
+            tone="accent"
+            onClick={() => setKind('individual')}
+          >
             Individual
           </Chip>
           <Chip selected={kind === 'couple'} tone="accent" onClick={() => setKind('couple')}>
@@ -132,8 +148,8 @@ export function EditClientSheet() {
         <Button fullWidth onClick={handleSave} disabled={!canSave}>
           {isSaving ? 'Guardando…' : 'Guardar cambios'}
         </Button>
-        <Button variant="danger" fullWidth onClick={handleDelete}>
-          Eliminar paciente
+        <Button variant="danger" fullWidth onClick={handleArchive}>
+          Archivar paciente
         </Button>
       </div>
     </Sheet>
