@@ -59,7 +59,8 @@ export function SessionDayList({
   order = 'desc',
 }: SessionDayListProps) {
   const sorted = [...sessions].sort((a, b) => (order === 'asc' ? a.startAt - b.startAt : b.startAt - a.startAt))
-  const today = startOfDay(Date.now())
+  const now = Date.now()
+  const today = startOfDay(now)
   const groups: { key: string; label: string; items: Session[]; isPast: boolean }[] = []
 
   for (const session of sorted) {
@@ -99,16 +100,19 @@ export function SessionDayList({
               {group.items
                 .slice()
                 .sort((a, b) => a.startAt - b.startAt)
-                .map((session) => (
-                  <SessionRow
-                    key={session.id}
-                    session={session}
-                    client={clientsById.get(session.clientId)}
-                    serviceType={serviceTypesById.get(session.serviceTypeId)}
-                    onMarkPaid={onMarkPaid}
-                    dim={group.isPast && session.paymentStatus !== 'pending'}
-                  />
-                ))}
+                .map((session) => {
+                  const hasEnded = session.startAt + session.durationMin * 60_000 <= now
+                  return (
+                    <SessionRow
+                      key={session.id}
+                      session={session}
+                      client={clientsById.get(session.clientId)}
+                      serviceType={serviceTypesById.get(session.serviceTypeId)}
+                      onMarkPaid={onMarkPaid}
+                      dim={hasEnded && session.paymentStatus !== 'pending'}
+                    />
+                  )
+                })}
             </div>
           </section>
         </Fragment>
