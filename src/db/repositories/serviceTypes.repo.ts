@@ -32,3 +32,15 @@ export async function updateServiceType(
 ): Promise<void> {
   await db.serviceTypes.update(id, changes)
 }
+
+/** Soft-deletes a service type — hidden everywhere it's listed, but the row itself stays put
+ * so past sessions that reference it (by id, with their own frozen name/price/duration) keep
+ * displaying correctly instead of falling back to "Otro". */
+export async function deleteServiceType(id: string): Promise<void> {
+  await db.serviceTypes.update(id, { deletedAt: Date.now() })
+}
+
+/** Undo for deleteServiceType. */
+export async function restoreServiceType(id: string): Promise<void> {
+  await db.serviceTypes.update(id, { deletedAt: null })
+}

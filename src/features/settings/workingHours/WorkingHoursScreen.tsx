@@ -107,10 +107,18 @@ export function WorkingHoursScreen() {
               const isClosed = dayHours === null || dayHours === undefined
               return (
                 <div key={weekday} className={styles.dayRow}>
-                  <span className={styles.dayLabel}>{WEEKDAY_LABELS[weekday]}</span>
-                  {isClosed ? (
-                    <span className={styles.closedLabel}>Cerrado</span>
-                  ) : (
+                  <div className={styles.dayTopLine}>
+                    <span className={styles.dayLabel}>{WEEKDAY_LABELS[weekday]}</span>
+                    <label className={styles.toggleRow}>
+                      <input
+                        type="checkbox"
+                        checked={isClosed}
+                        onChange={(e) => setDayClosed(weekday, e.target.checked)}
+                      />
+                      Cerrado
+                    </label>
+                  </div>
+                  {!isClosed && (
                     <div className={styles.hoursFields}>
                       <select
                         className={styles.select}
@@ -137,14 +145,6 @@ export function WorkingHoursScreen() {
                       </select>
                     </div>
                   )}
-                  <label className={styles.toggleRow}>
-                    <input
-                      type="checkbox"
-                      checked={isClosed}
-                      onChange={(e) => setDayClosed(weekday, e.target.checked)}
-                    />
-                    Cerrado
-                  </label>
                 </div>
               )
             })}

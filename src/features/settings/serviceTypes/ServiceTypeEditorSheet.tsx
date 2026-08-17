@@ -5,6 +5,8 @@ import { Chip } from '@/components/ui/Chip'
 import { useToast } from '@/components/ui/Toast'
 import {
   createServiceType,
+  deleteServiceType,
+  restoreServiceType,
   updateServiceType,
 } from '@/db/repositories/serviceTypes.repo'
 import { getErrorMessage } from '@/domain/errors'
@@ -40,6 +42,7 @@ export function ServiceTypeEditorSheet({
   )
   const [colorToken, setColorToken] = useState(serviceType?.colorToken ?? COLOR_TOKENS[0])
   const [isSaving, setIsSaving] = useState(false)
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
 
   // Re-sync local form state if the caller swaps which service type is being edited without
   // unmounting this sheet (e.g. tapping a different row while it's still open).
@@ -50,6 +53,7 @@ export function ServiceTypeEditorSheet({
     setIsBillable(serviceType?.isBillable ?? true)
     setClientKind(serviceType?.clientKind ?? 'any')
     setColorToken(serviceType?.colorToken ?? COLOR_TOKENS[0])
+    setConfirmingDelete(false)
   }, [serviceType])
 
   const parsedDuration = Math.max(5, Number.parseInt(durationMin, 10) || 0)
@@ -94,6 +98,27 @@ export function ServiceTypeEditorSheet({
     try {
       await updateServiceType(serviceType.id, { isArchived: !serviceType.isArchived })
       toast.show(serviceType.isArchived ? 'Tipo de sesión reactivado' : 'Tipo de sesión archivado')
+      onClose()
+    } catch (error) {
+      toast.show(getErrorMessage(error))
+    }
+  }
+
+  async function handleDelete() {
+    if (!isEditing) return
+    try {
+      await deleteServiceType(serviceType.id)
+      toast.show(
+        'Tipo de sesión eliminado',
+        {
+          label: 'Deshacer',
+          onClick: () =>
+            restoreServiceType(serviceType.id).catch((error: unknown) =>
+              toast.show(getErrorMessage(error)),
+            ),
+        },
+        { durationMs: 8000 },
+      )
       onClose()
     } catch (error) {
       toast.show(getErrorMessage(error))
@@ -206,10 +231,32 @@ export function ServiceTypeEditorSheet({
           {isSaving ? 'Guardando…' : isEditing ? 'Guardar cambios' : 'Crear tipo de sesión'}
         </Button>
 
-        {isEditing && (
+        {isEditing && !confirmingDelete && (
           <Button variant="secondary" fullWidth onClick={handleToggleArchive}>
             {serviceType.isArchived ? 'Reactivar' : 'Archivar'}
           </Button>
+        )}
+
+        {isEditing && !confirmingDelete && (
+          <Button variant="danger" fullWidth onClick={() => setConfirmingDelete(true)}>
+            Eliminar
+          </Button>
+        )}
+
+        {isEditing && confirmingDelete && (
+          <div className={styles.deleteWarning}>
+            <p className={styles.deleteWarningText}>
+              Se eliminará "{serviceType.name}". Las sesiones ya guardadas con este tipo
+              mantienen su nombre, precio y duración — esto no las afecta. Tendrás unos segundos
+              para deshacerlo después.
+            </p>
+            <Button variant="danger" fullWidth onClick={handleDelete}>
+              Eliminar para siempre
+            </Button>
+            <Button variant="secondary" fullWidth onClick={() => setConfirmingDelete(false)}>
+              Cancelar
+            </Button>
+          </div>
         )}
       </div>
     </Sheet>
