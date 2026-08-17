@@ -6,6 +6,7 @@ import { db } from '@/db/database'
 import { dayRange, monthRange, weekRange, shiftDays, capitalize } from '@/domain/dates'
 import { getDayHourSlots, getWeekFreeSlots, startOfWeekMonday } from '@/domain/schedule'
 import { listSessionsInRange, markSessionPaid } from '@/db/repositories/sessions.repo'
+import { getSettings } from '@/db/repositories/settings.repo'
 import { SessionRow } from '@/components/list/SessionRow'
 import { MonthCalendarGrid } from '@/features/month/MonthCalendarGrid'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -65,6 +66,8 @@ export function DayScreen() {
     [],
   )
 
+  const settings = useLiveQuery(() => getSettings(), [], null)
+
   const dayRangeValue = dayRange(selectedDay)
   const daySessions = useLiveQuery(
     () => listSessionsInRange(dayRangeValue.start, dayRangeValue.end),
@@ -72,8 +75,8 @@ export function DayScreen() {
     [],
   )
   const daySlots = useMemo(
-    () => getDayHourSlots(selectedDay, daySessions),
-    [selectedDay, daySessions],
+    () => getDayHourSlots(selectedDay, daySessions, settings?.weeklyBusinessHours),
+    [selectedDay, daySessions, settings?.weeklyBusinessHours],
   )
   const freeDaySlots = useMemo(() => daySlots.filter((s) => !s.occupied), [daySlots])
 
@@ -90,8 +93,10 @@ export function DayScreen() {
     todayStart.setHours(0, 0, 0, 0)
     // Don't show days that have already gone by — most relevant when viewing the current
     // week midweek, e.g. on a Thursday there's no point listing Monday's free hours.
-    return getWeekFreeSlots(weekMonday, weekSessions).filter((d) => d.date >= todayStart)
-  }, [weekMonday, weekSessions])
+    return getWeekFreeSlots(weekMonday, weekSessions, settings?.weeklyBusinessHours).filter(
+      (d) => d.date >= todayStart,
+    )
+  }, [weekMonday, weekSessions, settings?.weeklyBusinessHours])
 
   const clients = useLiveQuery(() => db.clients.toArray(), [], [])
   const serviceTypes = useLiveQuery(() => db.serviceTypes.toArray(), [], [])

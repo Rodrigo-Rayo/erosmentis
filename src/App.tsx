@@ -26,6 +26,16 @@ const SettingsScreen = lazy(() =>
 const BackupScreen = lazy(() =>
   import('@/features/settings/backup/BackupScreen').then((m) => ({ default: m.BackupScreen })),
 )
+const ServiceTypesScreen = lazy(() =>
+  import('@/features/settings/serviceTypes/ServiceTypesScreen').then((m) => ({
+    default: m.ServiceTypesScreen,
+  })),
+)
+const WorkingHoursScreen = lazy(() =>
+  import('@/features/settings/workingHours/WorkingHoursScreen').then((m) => ({
+    default: m.WorkingHoursScreen,
+  })),
+)
 const NewSessionSheet = lazy(() =>
   import('@/features/sessions/NewSessionSheet').then((m) => ({ default: m.NewSessionSheet })),
 )
@@ -106,6 +116,22 @@ export function App() {
               element={
                 <AppShell>
                   <BackupScreen />
+                </AppShell>
+              }
+            />
+            <Route
+              path="/ajustes/tipos-de-sesion"
+              element={
+                <AppShell>
+                  <ServiceTypesScreen />
+                </AppShell>
+              }
+            />
+            <Route
+              path="/ajustes/horario"
+              element={
+                <AppShell>
+                  <WorkingHoursScreen />
                 </AppShell>
               }
             />

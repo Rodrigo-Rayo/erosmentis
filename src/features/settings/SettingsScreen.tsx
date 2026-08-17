@@ -27,6 +27,18 @@ export function SettingsScreen() {
       </section>
 
       <section className={styles.section}>
+        <h2 className={styles.sectionTitle}>Consulta</h2>
+        <Link to="/ajustes/tipos-de-sesion" className={styles.backupLink}>
+          <span>Tipos de sesión</span>
+          <ArrowRightIcon className={styles.backupLinkIcon} aria-hidden="true" />
+        </Link>
+        <Link to="/ajustes/horario" className={styles.backupLink}>
+          <span>Horario de trabajo</span>
+          <ArrowRightIcon className={styles.backupLinkIcon} aria-hidden="true" />
+        </Link>
+      </section>
+
+      <section className={styles.section}>
         <h2 className={styles.sectionTitle}>Datos</h2>
         <p className={styles.note}>
           Todos tus datos se guardan solo en este dispositivo. Haz copias de seguridad regularmente

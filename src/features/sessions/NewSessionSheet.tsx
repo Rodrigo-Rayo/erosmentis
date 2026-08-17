@@ -11,6 +11,7 @@ import { CalendarIcon, ChevronLeftIcon, ChevronRightIcon } from '@/components/ic
 import { listServiceTypes } from '@/db/repositories/serviceTypes.repo'
 import { findConsumablePackage, getPackageBalance } from '@/db/repositories/packages.repo'
 import { getClient } from '@/db/repositories/clients.repo'
+import { getSettings } from '@/db/repositories/settings.repo'
 import { downloadSessionReminder, downloadSessionsReminder } from './reminderExport'
 import {
   createSession,
@@ -61,7 +62,11 @@ export function NewSessionSheet({ presetClientId, presetStartAt }: NewSessionShe
     [selectedDayRange.start, selectedDayRange.end],
     [],
   )
-  const hourSlots = useMemo(() => getDayHourSlots(startAt, daySessions), [startAt, daySessions])
+  const settings = useLiveQuery(() => getSettings(), [], null)
+  const hourSlots = useMemo(
+    () => getDayHourSlots(startAt, daySessions, settings?.weeklyBusinessHours),
+    [startAt, daySessions, settings?.weeklyBusinessHours],
+  )
 
   function selectHourSlot(hour: number, minute: number) {
     setStartAt((prev) => {

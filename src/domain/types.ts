@@ -123,6 +123,14 @@ export interface Expense {
   deletedAt: number | null
 }
 
+export interface BusinessHours {
+  startHour: number
+  endHour: number
+}
+
+/** Keyed by Date#getDay(): 0=Sunday, 1=Monday, ... 6=Saturday. A `null` value means closed that day. */
+export type WeeklyBusinessHours = Record<number, BusinessHours | null>
+
 export interface AppSettings {
   id: 'app'
   theme: 'system' | 'light' | 'dark'
@@ -135,4 +143,5 @@ export interface AppSettings {
   backupReminderDays: number
   seedVersion: number
   onboardingCompletedAt: number | null
+  weeklyBusinessHours: WeeklyBusinessHours
 }

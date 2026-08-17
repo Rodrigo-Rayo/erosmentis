@@ -1,4 +1,5 @@
 import { db } from '@/db/database'
+import { DEFAULT_WEEKLY_BUSINESS_HOURS } from '@/domain/schedule'
 import type { AppSettings } from '@/domain/types'
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -15,12 +16,15 @@ const DEFAULT_SETTINGS: AppSettings = {
   backupReminderDays: 60,
   seedVersion: 0,
   onboardingCompletedAt: null,
+  weeklyBusinessHours: DEFAULT_WEEKLY_BUSINESS_HOURS,
 }
 
-/** Read-only: safe to call from useLiveQuery. Never writes to the database. */
+/** Read-only: safe to call from useLiveQuery. Never writes to the database. Merges defaults
+ * under whatever is already stored so a settings row saved before a new AppSettings field was
+ * introduced still gets a sane value for it, instead of `undefined` at runtime. */
 export async function getSettings(): Promise<AppSettings> {
   const existing = await db.settings.get('app')
-  return existing ?? DEFAULT_SETTINGS
+  return existing ? { ...DEFAULT_SETTINGS, ...existing } : DEFAULT_SETTINGS
 }
 
 /** Writes the default settings row if missing. Call outside of any liveQuery context. */
