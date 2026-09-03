@@ -181,7 +181,7 @@ export function BackupScreen() {
         <input
           ref={fileInputRef}
           type="file"
-          accept=".pab,application/json"
+          accept=".pab,.json,application/json"
           onChange={handleFileSelected}
           className={styles.fileInput}
         />
