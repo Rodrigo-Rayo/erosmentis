@@ -89,6 +89,18 @@ describe('validateBackupReferences', () => {
     expect(issues.length).toBeGreaterThan(0)
     expect(issues[0]).toContain('ghost-client')
   })
+
+  it('ignores a dangling reference on an already soft-deleted session', () => {
+    // A session can outlive the client it points at (e.g. the client was removed by some other
+    // path first) without being a problem, as long as the session itself is already deleted —
+    // it's hidden everywhere in the app either way, so it must not block restoring an otherwise
+    // valid backup.
+    const payload = makePayload({
+      sessions: [makeSession({ clientId: 'ghost-client', deletedAt: Date.now() })],
+    })
+
+    expect(validateBackupReferences(payload)).toEqual([])
+  })
 })
 
 describe('backupPayloadSchema size bounds', () => {

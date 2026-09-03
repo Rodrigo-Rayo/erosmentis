@@ -150,11 +150,14 @@ export const backupEnvelopeSchema = z.object({
 export type BackupEnvelope = z.infer<typeof backupEnvelopeSchema>
 
 /** Cross-table reference checks the shape schema above can't express on its own — every
- * clientId/serviceTypeId/sessionId/packageId a record points at must exist in the same backup,
- * so a corrupted or hand-edited file can't quietly import orphaned sessions/payments that would
- * show up as confusing, unattributable data (or break assumptions elsewhere, like a payment
- * screen expecting its session to exist). Returns a human-readable list of problems; empty
- * means the backup is internally consistent. */
+ * clientId/serviceTypeId/sessionId/packageId a still-active record points at must exist in the
+ * same backup, so a corrupted or hand-edited file can't quietly import orphaned sessions/
+ * payments that would show up as confusing, unattributable data (or break assumptions
+ * elsewhere, like a payment screen expecting its session to exist). Already soft-deleted
+ * records are skipped: they're hidden everywhere in the app regardless of what they point at,
+ * so a dangling reference on one (e.g. a deleted session whose client was later removed by some
+ * other path) shouldn't block restoring an otherwise perfectly good backup. Returns a
+ * human-readable list of problems; empty means the backup is internally consistent. */
 export function validateBackupReferences(payload: BackupPayload): string[] {
   const issues: string[] = []
   const clientIds = new Set(payload.tables.clients.map((c) => c.id))
@@ -163,6 +166,7 @@ export function validateBackupReferences(payload: BackupPayload): string[] {
   const packageIds = new Set(payload.tables.packages.map((p) => p.id))
 
   for (const session of payload.tables.sessions) {
+    if (session.deletedAt !== null) continue
     if (!clientIds.has(session.clientId)) {
       issues.push(`session ${session.id} references missing client ${session.clientId}`)
     }
@@ -175,6 +179,7 @@ export function validateBackupReferences(payload: BackupPayload): string[] {
   }
 
   for (const pkg of payload.tables.packages) {
+    if (pkg.deletedAt !== null) continue
     if (!clientIds.has(pkg.clientId)) {
       issues.push(`package ${pkg.id} references missing client ${pkg.clientId}`)
     }
@@ -184,6 +189,7 @@ export function validateBackupReferences(payload: BackupPayload): string[] {
   }
 
   for (const payment of payload.tables.payments) {
+    if (payment.deletedAt !== null) continue
     if (!clientIds.has(payment.clientId)) {
       issues.push(`payment ${payment.id} references missing client ${payment.clientId}`)
     }
