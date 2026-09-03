@@ -219,6 +219,7 @@ export function BackupScreen() {
               <li>{preview.counts.sessions} sesiones</li>
               <li>{preview.counts.packages} bonos</li>
               <li>{preview.counts.payments} pagos</li>
+              <li>{preview.counts.expenses} gastos</li>
             </ul>
             <Button
               fullWidth

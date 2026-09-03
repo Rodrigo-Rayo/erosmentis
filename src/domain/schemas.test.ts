@@ -34,6 +34,7 @@ function makePayload(overrides: Partial<BackupPayload['tables']> = {}): BackupPa
       sessions: [],
       packages: [],
       payments: [],
+      expenses: [],
       ...overrides,
     },
   }

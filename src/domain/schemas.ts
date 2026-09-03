@@ -105,6 +105,18 @@ export const paymentSchema = z.object({
   deletedAt: z.number().nullable(),
 })
 
+export const expenseSchema = z.object({
+  id: z.string().max(ID_MAX),
+  category: z.enum(['publicidad', 'alquiler', 'otro']),
+  label: z.string().max(SHORT_TEXT_MAX),
+  amountCents: z.number(),
+  incurredAt: z.number(),
+  notes: z.string().max(NOTES_MAX),
+  createdAt: z.number(),
+  updatedAt: z.number(),
+  deletedAt: z.number().nullable(),
+})
+
 export const backupPayloadSchema = z.object({
   version: z.literal(1),
   exportedAt: z.number(),
@@ -114,6 +126,9 @@ export const backupPayloadSchema = z.object({
     sessions: z.array(sessionSchema).max(TABLE_MAX),
     packages: z.array(packageSchema).max(TABLE_MAX),
     payments: z.array(paymentSchema).max(TABLE_MAX),
+    // Optional/defaulted: backups taken before expenses were added to the export must still
+    // restore cleanly, just without any expenses to bring back.
+    expenses: z.array(expenseSchema).max(TABLE_MAX).optional().default([]),
   }),
 })
 

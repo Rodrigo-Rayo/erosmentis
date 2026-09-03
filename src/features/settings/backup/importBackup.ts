@@ -21,6 +21,7 @@ export interface RestorePreview {
     sessions: number
     packages: number
     payments: number
+    expenses: number
   }
 }
 
@@ -65,29 +66,27 @@ export function previewBackup(payload: BackupPayload): RestorePreview {
       sessions: payload.tables.sessions.length,
       packages: payload.tables.packages.length,
       payments: payload.tables.payments.length,
+      expenses: payload.tables.expenses.length,
     },
   }
 }
 
 async function snapshotCurrentData(): Promise<BackupPayload['tables']> {
-  const [clients, serviceTypes, sessions, packages, payments] = await Promise.all([
+  const [clients, serviceTypes, sessions, packages, payments, expenses] = await Promise.all([
     db.clients.toArray(),
     db.serviceTypes.toArray(),
     db.sessions.toArray(),
     db.packages.toArray(),
     db.payments.toArray(),
+    db.expenses.toArray(),
   ])
-  return { clients, serviceTypes, sessions, packages, payments }
+  return { clients, serviceTypes, sessions, packages, payments, expenses }
 }
 
 async function replaceAllTables(tables: BackupPayload['tables']): Promise<void> {
   await db.transaction(
     'rw',
-    db.clients,
-    db.serviceTypes,
-    db.sessions,
-    db.packages,
-    db.payments,
+    [db.clients, db.serviceTypes, db.sessions, db.packages, db.payments, db.expenses],
     async () => {
       await Promise.all([
         db.clients.clear(),
@@ -95,6 +94,7 @@ async function replaceAllTables(tables: BackupPayload['tables']): Promise<void> 
         db.sessions.clear(),
         db.packages.clear(),
         db.payments.clear(),
+        db.expenses.clear(),
       ])
       await Promise.all([
         db.clients.bulkAdd(tables.clients),
@@ -102,6 +102,7 @@ async function replaceAllTables(tables: BackupPayload['tables']): Promise<void> 
         db.sessions.bulkAdd(tables.sessions),
         db.packages.bulkAdd(tables.packages),
         db.payments.bulkAdd(tables.payments),
+        db.expenses.bulkAdd(tables.expenses),
       ])
     },
   )
@@ -145,11 +146,7 @@ export async function restoreMerge(payload: BackupPayload): Promise<() => Promis
   const snapshot = await snapshotCurrentData()
   await db.transaction(
     'rw',
-    db.clients,
-    db.serviceTypes,
-    db.sessions,
-    db.packages,
-    db.payments,
+    [db.clients, db.serviceTypes, db.sessions, db.packages, db.payments, db.expenses],
     async () => {
       await mergeRecords(
         (id) => db.clients.get(id),
@@ -175,6 +172,11 @@ export async function restoreMerge(payload: BackupPayload): Promise<() => Promis
         (id) => db.payments.get(id),
         (r) => db.payments.put(r),
         payload.tables.payments,
+      )
+      await mergeRecords(
+        (id) => db.expenses.get(id),
+        (r) => db.expenses.put(r),
+        payload.tables.expenses,
       )
     },
   )

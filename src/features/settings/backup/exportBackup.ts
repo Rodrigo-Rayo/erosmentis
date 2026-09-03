@@ -6,17 +6,18 @@ import { encryptText } from './crypto'
 const BACKUP_FORMAT_VERSION = 1
 
 async function collectPayload(): Promise<BackupPayload> {
-  const [clients, serviceTypes, sessions, packages, payments] = await Promise.all([
+  const [clients, serviceTypes, sessions, packages, payments, expenses] = await Promise.all([
     db.clients.toArray(),
     db.serviceTypes.toArray(),
     db.sessions.toArray(),
     db.packages.toArray(),
     db.payments.toArray(),
+    db.expenses.toArray(),
   ])
   return {
     version: BACKUP_FORMAT_VERSION,
     exportedAt: Date.now(),
-    tables: { clients, serviceTypes, sessions, packages, payments },
+    tables: { clients, serviceTypes, sessions, packages, payments, expenses },
   }
 }
 
